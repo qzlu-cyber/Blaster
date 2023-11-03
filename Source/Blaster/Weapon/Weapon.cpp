@@ -6,12 +6,15 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AWeapon::AWeapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+
+	//bReplicates = true; // 设置为 replicated
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
 	RootComponent = WeaponMesh;
@@ -54,6 +57,29 @@ void AWeapon::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+// 注册需要同步的属性
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, WeaponState);
+}
+
+// 当 WeaponState 属性改变时调用
+void AWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState)
+	{
+		case EWeaponState::EWS_Equipped:
+			ShowWeaponPickupWidget(false);
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			break;
+		case EWeaponState::EWS_Dropped: // 被丢弃
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 开启武器的碰撞
+		default: break;
+	}
+}
+
 /**
  * @brief 角色和武器触发重叠时，显示拾取提示
  * @param OverlappedComponent 触发重叠的组件
@@ -87,5 +113,21 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)
 {
 	if (PickupWidget) PickupWidget->SetVisibility(bShowWidget);
+}
+
+void AWeapon::SetWeaponState(EWeaponState NewState)
+{
+	WeaponState = NewState;
+	switch (WeaponState)
+	{
+		case EWeaponState::EWS_Equipped: // 被拾取
+			ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
+			// 装备武器后禁用武器的碰撞，避免武器碰撞到角色后在 server 端生成重叠事件再次显示拾取提示
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
+			break;
+		case EWeaponState::EWS_Dropped: // 被丢弃
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 开启武器的碰撞
+		default: break;
+	}
 }
 

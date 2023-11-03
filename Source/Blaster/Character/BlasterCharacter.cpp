@@ -3,6 +3,7 @@
 
 #include "BlasterCharacter.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -33,13 +34,24 @@ ABlasterCharacter::ABlasterCharacter()
 
 	bUseControllerRotationYaw = false; // 设置 pawn 不跟随控制器的旋转
 	GetCharacterMovement()->bOrientRotationToMovement = true; // 设置 pawn 的旋转跟随移动方向
+
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
+	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
 }
 
+// 注册需要同步的属性
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly); // 只在 owner 端同步
+}
+
+void ABlasterCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (Combat) Combat->Character = this;
 }
 
 // Called when the game starts or when spawned
@@ -96,6 +108,14 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			EnhancedInputComponent->BindAction(LookUpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::LookUp);
 			EnhancedInputComponent->BindAction(LookUpAction, ETriggerEvent::Completed, this, &ABlasterCharacter::LookUp);
 		}
+		if (PickUpAction) // 绑定拾取事件
+		{
+			EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Completed, this, &ABlasterCharacter::PickUp);
+		}
+		if (DropAction)
+		{
+			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Drop);
+		}
 	}
 
 }
@@ -140,6 +160,25 @@ void ABlasterCharacter::LookUp(const FInputActionValue& Value)
 	AddControllerPitchInput(Value.GetMagnitude());
 }
 
+// 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
+void ABlasterCharacter::PickUp(const FInputActionValue& Value)
+{
+	if (Combat)
+	{
+		if (HasAuthority()) Combat->EquipWeapon(OverlappingWeapon); // 如果是 server 端，直接拾取
+		else ServerPickUp(); // 如果是 client 端，调用 RPC
+	}
+}
+
+void ABlasterCharacter::Drop(const FInputActionValue& Value)
+{
+	if (Combat)
+	{
+		if (HasAuthority()) Combat->DropWeapon();
+		else SeverDrop();
+	}
+}
+
 void ABlasterCharacter::SetWeaponOverlapping(AWeapon* Weapon)
 {
 	if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(false);
@@ -152,8 +191,20 @@ void ABlasterCharacter::SetWeaponOverlapping(AWeapon* Weapon)
 	}
 }
 
+// 当 OverlappingWeapon 发生变化时，会自动调用该函数
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(true);
 	if (LastWeapon) LastWeapon->ShowWeaponPickupWidget(false);
+}
+
+// 当 Client 调用 RPC 时， Server 端实际执行的操作
+void ABlasterCharacter::ServerPickUp_Implementation()
+{
+	if (Combat) Combat->EquipWeapon(OverlappingWeapon);
+}
+
+void ABlasterCharacter::SeverDrop_Implementation()
+{
+	if (Combat) Combat->DropWeapon();
 }

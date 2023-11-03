@@ -46,19 +46,28 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	void ShowWeaponPickupWidget(bool bShowWidget);
 
+	void SetWeaponState(EWeaponState NewState);
+	FORCEINLINE class USphereComponent* GetWeaponCollision() const { return WeaponCollision; }
+
+private:
+	UFUNCTION()
+	void OnRep_WeaponState();
+
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
-	class USphereComponent* WeaponCollision;
+	USphereComponent* WeaponCollision;
 	
-	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
+	UPROPERTY(ReplicatedUsing=OnRep_WeaponState, VisibleAnywhere, Category="Weapon Properties")
 	EWeaponState WeaponState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="HUD", meta=(AllowPrivateAccess="true"))
