@@ -37,6 +37,8 @@ ABlasterCharacter::ABlasterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
 	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
+
+	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
 }
 
 // 注册需要同步的属性
@@ -116,6 +118,15 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		{
 			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Drop);
 		}
+		if (CrouchAction)
+		{
+			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Crouching);
+		}
+		if (AimAction)
+		{
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Aiming);
+		}
 	}
 
 }
@@ -158,6 +169,26 @@ void ABlasterCharacter::Turn(const FInputActionValue& Value)
 void ABlasterCharacter::LookUp(const FInputActionValue& Value)
 {
 	AddControllerPitchInput(Value.GetMagnitude());
+}
+
+void ABlasterCharacter::Crouching(const FInputActionValue& Value)
+{
+	if (bIsCrouched) UnCrouch();
+	else Crouch();
+}
+
+void ABlasterCharacter::Aiming(const FInputActionValue& Value)
+{
+	if (Value.GetMagnitude() > 0.f)
+	{
+		if (HasAuthority()) Combat->Aiming(true);
+		else ServerAiming(true);
+	}
+	else
+	{
+		if (HasAuthority()) Combat->Aiming(false);
+		else ServerAiming(false);
+	}
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
@@ -209,3 +240,20 @@ void ABlasterCharacter::SeverDrop_Implementation()
 {
 	if (Combat) Combat->DropWeapon();
 }
+
+void ABlasterCharacter::ServerAiming_Implementation(bool bIsAiming)
+{
+	if (Combat) Combat->Aiming(bIsAiming);
+}
+
+bool ABlasterCharacter::IsWeaponEquipped() const
+{
+	// Equip Weapon 只在 server 端执行，要设置 EquippedWeapon 为 replicated
+	return (Combat && Combat->EquippedWeapon);
+}
+
+bool ABlasterCharacter::IsAiming() const
+{
+	return  (Combat && Combat->bIsAiming);
+}
+

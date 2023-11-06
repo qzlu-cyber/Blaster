@@ -15,6 +15,17 @@ public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
 
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// 重写 GetLifetimeReplicatedProps() 函数，设置需要同步的属性
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void PostInitializeComponents() override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,19 +42,17 @@ protected:
 	void PickUp(const FInputActionValue& Value);
 	void Drop(const FInputActionValue& Value);
 
+	// 下蹲
+	void Crouching(const FInputActionValue& Value);
+
+	// 瞄准
+	void Aiming(const FInputActionValue& Value);
+	
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// 重写 GetLifetimeReplicatedProps() 函数，设置需要同步的属性
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	virtual void PostInitializeComponents() override;
-
 	void SetOverlappingWeapon(class AWeapon* Weapon);
+
+	bool IsWeaponEquipped() const;
+	bool IsAiming() const;
 
 private:
 	UFUNCTION()
@@ -52,10 +61,13 @@ private:
 	/// Remote Procedure Calls: 在一台机器上调用某些操作，但在另一台机器上执行
 	/// 已经通过 Overlapping 实现了将变量从 server 端 replicate 到 client 端，即从 server 端向 client 端同步数据
 	/// 当 client 端需要通知 server 端执行某些操作时（例如拾取物品等），可以使用 RPC
+	/// 当 RPC 是从 client 调用并在 server 上执行，client 必须拥有调用 RPC 的 Actor
 	UFUNCTION(Server, Reliable)
 	void ServerPickUp();
 	UFUNCTION(Server, Reliable)
 	void SeverDrop();
+	UFUNCTION(Server, Reliable)
+	void ServerAiming(bool bIsAiming);
 
 private:
 	/// Components
@@ -87,6 +99,12 @@ private:
 	UInputAction* PickUpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* DropAction;
+	// Crouch
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* CrouchAction;
+	// Aiming
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* AimAction;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;

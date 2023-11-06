@@ -27,4 +27,10 @@ private:
 	bool bIsInAir; // 是否在空中
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	bool bIsAccelerating; // 是否在按下移动键
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	bool bIsCrouched; // 是否蹲下
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+	bool bWeaponEquipped; // 是否装备武器
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
+	bool bIsAiming; // 是否在瞄准
 };
