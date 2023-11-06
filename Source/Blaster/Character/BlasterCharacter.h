@@ -43,7 +43,7 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
-	void SetWeaponOverlapping(class AWeapon* Weapon);
+	void SetOverlappingWeapon(class AWeapon* Weapon);
 
 private:
 	UFUNCTION()

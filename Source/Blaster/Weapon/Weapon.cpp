@@ -14,7 +14,7 @@ AWeapon::AWeapon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	//bReplicates = true; // 设置为 replicated
+	bReplicates = true; // 设置为 replicated， 如果不设置，client 端就不能复制变量，WeaponState 属性在 client 端不会同步
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
 	RootComponent = WeaponMesh;
@@ -93,7 +93,7 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
-	if (Character) Character->SetWeaponOverlapping(this);
+	if (Character) Character->SetOverlappingWeapon(this);
 }
 
 /**
@@ -107,7 +107,7 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
-	if (Character) Character->SetWeaponOverlapping(nullptr);
+	if (Character) Character->SetOverlappingWeapon(nullptr);
 }
 
 void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)

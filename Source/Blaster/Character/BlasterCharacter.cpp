@@ -179,19 +179,20 @@ void ABlasterCharacter::Drop(const FInputActionValue& Value)
 	}
 }
 
-void ABlasterCharacter::SetWeaponOverlapping(AWeapon* Weapon)
+void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(false);
 	
 	OverlappingWeapon = Weapon;
 
+	// rep notify 只在 client 端调用，在 server 端显示 pickup widget
 	if (IsLocallyControlled())
 	{
 		if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(true);
 	}
 }
 
-// 当 OverlappingWeapon 发生变化时，会自动调用该函数
+// 当 OverlappingWeapon 被 sever 端 replicate 到指定的 client 端时调用
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(true);
