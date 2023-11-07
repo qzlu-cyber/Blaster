@@ -40,4 +40,9 @@ private:
 	FRotator DeltaRotation; // 角色旋转的变化量
 	FRotator CharacterLastFrameRotation; // 角色上一帧的旋转
 	FRotator CharacterRotation; // 角色当前的旋转
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	float AOYaw; // Aim Offset Yaw
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	float AOPitch; // Aim Offset Pitch
 };

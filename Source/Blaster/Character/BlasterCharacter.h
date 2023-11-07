@@ -47,12 +47,18 @@ protected:
 
 	// 瞄准
 	void Aiming(const FInputActionValue& Value);
+
+	// 配置 AimOffset
+	void AimOffset(float DeltaTime);
 	
 public:	
 	void SetOverlappingWeapon(class AWeapon* Weapon);
 
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
+
+	FORCEINLINE float GetAOYaw() const { return AOYaw; }
+	FORCEINLINE float GetAOPitch() const { return AOPitch; }
 
 private:
 	UFUNCTION()
@@ -112,4 +118,8 @@ private:
 	/// Weapon Overlapping
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
+
+	float AOYaw;
+	float AOPitch;
+	FRotator StartAimRotation;
 };

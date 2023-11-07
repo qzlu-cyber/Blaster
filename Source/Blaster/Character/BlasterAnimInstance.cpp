@@ -43,4 +43,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const float Target = Delta.Yaw / DeltaSeconds; // 缩放变化量，得到角色旋转的目标值
 	const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f); // 插值计算角色旋转的目标值
 	Lean = FMath::Clamp(Interp, -90.f, 90.f); // 限制角色旋转的范围
+
+	AOYaw = BlasterCharacter->GetAOYaw();
+	AOPitch = BlasterCharacter->GetAOPitch();
 }

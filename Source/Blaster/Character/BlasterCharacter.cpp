@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -69,6 +70,35 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AimOffset(DeltaTime);
+}
+
+void ABlasterCharacter::AimOffset(float DeltaTime)
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	
+	if (Speed > 0.f || bIsInAir)
+	{
+		StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AOYaw = 0.f;
+
+		bUseControllerRotationYaw = true;
+	}
+	if (Speed == 0.f && !bIsInAir)
+	{
+		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
+		AOYaw = DeltaAimRotation.Yaw;
+
+		bUseControllerRotationYaw = false;
+	}
+
+	AOPitch = GetBaseAimRotation().Pitch;
 }
 
 // Called to bind functionality to input
