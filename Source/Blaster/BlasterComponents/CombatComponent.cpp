@@ -7,6 +7,7 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -14,6 +15,9 @@ UCombatComponent::UCombatComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+
+	BaseWalkSpeed = 600.f;
+	AimWalkSpeed = 300.f;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -28,12 +32,23 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 }
 
 // Called every frame
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && Character)
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
+		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	}
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -47,6 +62,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
+	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
+	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
+	Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
 }
 
 void UCombatComponent::DropWeapon()
@@ -76,8 +95,14 @@ void UCombatComponent::DropWeapon()
 	EquippedWeapon = nullptr;
 }
 
+void UCombatComponent::OnRep_IsAiming(bool bLastIsAiming)
+{
+	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bLastIsAiming ? BaseWalkSpeed : AimWalkSpeed;
+}
+
 void UCombatComponent::Aiming(bool bAiming)
 {
 	bIsAiming = bAiming;
-}
 
+	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
+}

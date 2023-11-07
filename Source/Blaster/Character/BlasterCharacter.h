@@ -38,9 +38,9 @@ protected:
 	void Turn(const FInputActionValue& Value);
 	void LookUp(const FInputActionValue& Value);
 
-	// 拾取 / 丢弃武器
-	void PickUp(const FInputActionValue& Value);
-	void Drop(const FInputActionValue& Value);
+	//  装备 / 丢弃武器
+	void EquipWeapon(const FInputActionValue& Value);
+	void DropWeapon(const FInputActionValue& Value);
 
 	// 下蹲
 	void Crouching(const FInputActionValue& Value);
@@ -63,9 +63,9 @@ private:
 	/// 当 client 端需要通知 server 端执行某些操作时（例如拾取物品等），可以使用 RPC
 	/// 当 RPC 是从 client 调用并在 server 上执行，client 必须拥有调用 RPC 的 Actor
 	UFUNCTION(Server, Reliable)
-	void ServerPickUp();
+	void ServerEquipWeapon();
 	UFUNCTION(Server, Reliable)
-	void SeverDrop();
+	void SeverDropWeapon();
 	UFUNCTION(Server, Reliable)
 	void ServerAiming(bool bIsAiming);
 
@@ -94,7 +94,7 @@ private:
 	UInputAction* TurnAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* LookUpAction;
-	// Pick Up / Drop
+	// Equip / Drop Weapon
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* PickUpAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))

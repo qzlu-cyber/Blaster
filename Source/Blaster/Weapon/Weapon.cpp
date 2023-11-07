@@ -14,7 +14,7 @@ AWeapon::AWeapon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	bReplicates = true; // 设置为 replicated， 如果不设置，client 端就不能复制变量，WeaponState 属性在 client 端不会同步
+	bReplicates = true; // 设置为 replicated，如果不设置，client 端就不能复制变量，WeaponState 属性在 client 端不会同步
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
 	RootComponent = WeaponMesh;
@@ -65,21 +65,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	DOREPLIFETIME(AWeapon, WeaponState);
 }
 
-// 当 WeaponState 属性改变时调用
-void AWeapon::OnRep_WeaponState()
-{
-	switch (WeaponState)
-	{
-		case EWeaponState::EWS_Equipped:
-			ShowWeaponPickupWidget(false);
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			break;
-		case EWeaponState::EWS_Dropped: // 被丢弃
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 开启武器的碰撞
-		default: break;
-	}
-}
-
 /**
  * @brief 角色和武器触发重叠时，显示拾取提示
  * @param OverlappedComponent 触发重叠的组件
@@ -113,6 +98,21 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)
 {
 	if (PickupWidget) PickupWidget->SetVisibility(bShowWidget);
+}
+
+// 当 WeaponState 属性改变时调用
+void AWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState)
+	{
+		case EWeaponState::EWS_Equipped:
+			ShowWeaponPickupWidget(false);
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			break;
+		case EWeaponState::EWS_Dropped: // 被丢弃
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 开启武器的碰撞
+		default: break;
+	}
 }
 
 void AWeapon::SetWeaponState(EWeaponState NewState)

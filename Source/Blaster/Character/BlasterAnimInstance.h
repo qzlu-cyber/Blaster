@@ -33,4 +33,11 @@ private:
 	bool bWeaponEquipped; // 是否装备武器
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	bool bIsAiming; // 是否在瞄准
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	float YawOffset; // 相对于摄像机方向，角色前进方向的偏移量
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	float Lean; // 角色倾斜
+	FRotator DeltaRotation; // 角色旋转的变化量
+	FRotator CharacterLastFrameRotation; // 角色上一帧的旋转
+	FRotator CharacterRotation; // 角色当前的旋转
 };

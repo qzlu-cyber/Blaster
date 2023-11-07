@@ -34,13 +34,25 @@ public:
 	void Aiming(bool bAiming);
 
 private:
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+	void OnRep_IsAiming(bool bLastIsAiming);
+
+private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon; // 当前装备的武器
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_IsAiming)
 	bool bIsAiming; // 是否在瞄准
+
+	UPROPERTY(EditAnywhere)
+	float BaseWalkSpeed;
+	UPROPERTY(EditAnywhere)
+	float AimWalkSpeed;
 
 	friend class ABlasterCharacter;
 };

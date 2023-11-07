@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -35,10 +36,12 @@ ABlasterCharacter::ABlasterCharacter()
 	bUseControllerRotationYaw = false; // 设置 pawn 不跟随控制器的旋转
 	GetCharacterMovement()->bOrientRotationToMovement = true; // 设置 pawn 的旋转跟随移动方向
 
-	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("Combat"));
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
 
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 // 注册需要同步的属性
@@ -112,11 +115,11 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 		if (PickUpAction) // 绑定拾取事件
 		{
-			EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Completed, this, &ABlasterCharacter::PickUp);
+			EnhancedInputComponent->BindAction(PickUpAction, ETriggerEvent::Completed, this, &ABlasterCharacter::EquipWeapon);
 		}
 		if (DropAction)
 		{
-			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Drop);
+			EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Completed, this, &ABlasterCharacter::DropWeapon);
 		}
 		if (CrouchAction)
 		{
@@ -192,21 +195,21 @@ void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
-void ABlasterCharacter::PickUp(const FInputActionValue& Value)
+void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
 	if (Combat)
 	{
 		if (HasAuthority()) Combat->EquipWeapon(OverlappingWeapon); // 如果是 server 端，直接拾取
-		else ServerPickUp(); // 如果是 client 端，调用 RPC
+		else ServerEquipWeapon(); // 如果是 client 端，调用 RPC
 	}
 }
 
-void ABlasterCharacter::Drop(const FInputActionValue& Value)
+void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
 {
 	if (Combat)
 	{
 		if (HasAuthority()) Combat->DropWeapon();
-		else SeverDrop();
+		else SeverDropWeapon();
 	}
 }
 
@@ -231,12 +234,14 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 }
 
 // 当 Client 调用 RPC 时， Server 端实际执行的操作
-void ABlasterCharacter::ServerPickUp_Implementation()
+void ABlasterCharacter::ServerEquipWeapon_Implementation()
 {
+	/// OverlappingWeapon 只复制给了 owner，所以只有 owner 可以拾取武器
+	/// 其他 client 端的 OverlappingWeapon 为 nullptr，所以不能拾取武器
 	if (Combat) Combat->EquipWeapon(OverlappingWeapon);
 }
 
-void ABlasterCharacter::SeverDrop_Implementation()
+void ABlasterCharacter::SeverDropWeapon_Implementation()
 {
 	if (Combat) Combat->DropWeapon();
 }
@@ -254,6 +259,6 @@ bool ABlasterCharacter::IsWeaponEquipped() const
 
 bool ABlasterCharacter::IsAiming() const
 {
-	return  (Combat && Combat->bIsAiming);
+	return (Combat && Combat->bIsAiming);
 }
 
