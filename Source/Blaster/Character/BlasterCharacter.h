@@ -119,7 +119,8 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
 
-	float AOYaw;
-	float AOPitch;
+	// Aim Offset
+	float AOYaw; // 静止时的 BaseAimRotation 和 静止后当前的 BaseAimRotation 的 Delta Yaw
+	float AOPitch; // 
 	FRotator StartAimRotation;
 };

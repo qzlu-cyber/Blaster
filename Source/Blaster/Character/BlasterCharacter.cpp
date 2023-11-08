@@ -76,11 +76,13 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::AimOffset(float DeltaTime)
 {
+	if (Combat && !Combat->EquippedWeapon) return;
+	
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
-	float Speed = Velocity.Size();
+	const float Speed = Velocity.Size();
 
-	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	const bool bIsInAir = GetCharacterMovement()->IsFalling();
 	
 	if (Speed > 0.f || bIsInAir)
 	{
@@ -89,16 +91,25 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 
 		bUseControllerRotationYaw = true;
 	}
+	// 只有角色静止时才会使用 AimOffset
 	if (Speed == 0.f && !bIsInAir)
 	{
 		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
 		AOYaw = DeltaAimRotation.Yaw;
 
-		bUseControllerRotationYaw = false;
+		bUseControllerRotationYaw = false; // 角色静止时，不跟随控制器的旋转，只使用瞄准旋转角度来控制 AOYaw，而不受控制器旋转的影响
 	}
 
 	AOPitch = GetBaseAimRotation().Pitch;
+	/// AOPitch 会在网络同步中压缩为 unsinged 类型，导致负数符号丢失
+	/// 对 AOPitch 进行修正，使得其范围为 [-90, 90]
+	if (AOPitch > 90.f && !IsLocallyControlled())
+	{
+		const FVector2D InRange(270.f, 360.f);
+		const FVector2D OutRange(-90.f, 0.f);
+		AOPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AOPitch);
+	}
 }
 
 // Called to bind functionality to input
