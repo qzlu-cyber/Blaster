@@ -99,8 +99,17 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
 		AOYaw = DeltaAimRotation.Yaw;
+		
+		if (TurnInPlace == ETurnInPlace::ETIP_NotTurning) InterpAOYaw = AOYaw;
 
-		bUseControllerRotationYaw = false; // 角色静止时，不跟随控制器的旋转，只使用瞄准旋转角度来控制 AOYaw，而不受控制器旋转的影响
+		/// 实现角色根骨骼的旋转
+		// 设置角色跟随控制器旋转，当角色旋转时，保持根骨不动，直到旋转到 (-)90 度，这时根骨会向右(向左)旋转
+		// 在动画蓝图中，使用 RotateRootBone 将角色根骨骼转回去
+		// 所以要做的就是改变 AOYaw 的值，当旋转时，可以让该值趋近于零(TurningInPlace 插值)，根骨骼就会根据控制旋转
+		// AOYaw 用来模拟角色上半身的目标偏移。通过改变 AOYaw 的值，可以控制角色上半身的旋转
+		// 又由于角色跟随控制器旋转，当 AOYaw 的值为 0 时，角色的根骨骼会转回到角色的方向
+		// 插值使旋转更加平滑
+		bUseControllerRotationYaw = true;
 
 		TurningInPlace(DeltaTime);
 	}
@@ -120,6 +129,20 @@ void ABlasterCharacter::TurningInPlace(float DeltaTime)
 {
 	if (AOYaw > 90.f) TurnInPlace = ETurnInPlace::ETIP_Right;
 	else if (AOYaw < -90.f) TurnInPlace = ETurnInPlace::ETIP_Left;
+
+	// 如果角色正在转身，将角色的旋转设置为插值后的旋转
+	if (TurnInPlace != ETurnInPlace::ETIP_NotTurning)
+	{
+		InterpAOYaw = FMath::FInterpTo(InterpAOYaw, 0.f, DeltaTime, 6.f); // 插值计算角色旋转的目标值
+		AOYaw = InterpAOYaw; // 将角色的旋转设置为插值后的旋转
+
+		// 转动角度足够小，表示转身已经完成
+		if (FMath::Abs(AOYaw) < 15.f)
+		{
+			TurnInPlace = ETurnInPlace::ETIP_NotTurning;
+			StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f); // 更新 StartAimRotation 用于下一次转身
+		}
+	}
 }
 
 // Called to bind functionality to input

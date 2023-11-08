@@ -54,7 +54,7 @@ protected:
 	// 配置 AimOffset
 	void AimOffset(float DeltaTime);
 
-	// 转身动画
+	// 处理原地转向的逻辑
 	void TurningInPlace(float DeltaTime);
 	
 public:	
@@ -134,4 +134,5 @@ private:
 
 	// Turn In Place
 	ETurnInPlace TurnInPlace;
+	float InterpAOYaw;
 };
