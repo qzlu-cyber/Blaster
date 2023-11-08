@@ -45,6 +45,9 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 初始化转身动画状态
+
+	NetUpdateFrequency = 66.f; // 设置网络同步频率，将此 actor 进行每秒复制的频率
+	MinNetUpdateFrequency = 33.f; // 设置网络同步频率，复制属性很少发生变化时的节流率
 }
 
 // 注册需要同步的属性

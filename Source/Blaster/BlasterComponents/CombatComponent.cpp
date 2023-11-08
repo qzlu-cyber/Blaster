@@ -17,7 +17,7 @@ UCombatComponent::UCombatComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	BaseWalkSpeed = 600.f;
-	AimWalkSpeed = 300.f;
+	AimWalkSpeed = 400.f;
 }
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
