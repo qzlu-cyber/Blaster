@@ -2,6 +2,7 @@
 
 
 #include "BlasterAnimInstance.h"
+#include "Blaster/Weapon/Weapon.h"
 
 #include "BlasterCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -27,6 +28,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	bIsInAir = BlasterCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = BlasterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f ? true : false;
+	EquippedWeapon = BlasterCharacter->GetEquippedWeapon();
 	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
 	bIsCrouched = BlasterCharacter->bIsCrouched;
 	bIsAiming = BlasterCharacter->IsAiming();
@@ -46,4 +48,21 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	AOYaw = BlasterCharacter->GetAOYaw();
 	AOPitch = BlasterCharacter->GetAOPitch();
+
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BlasterCharacter->GetMesh())
+	{
+		// 从武器的 LeftHandSocket 获取 Fabrik 手臂 IK 在世界坐标系中的位置
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+		FVector OutPosition;
+		FRotator OutRotation;
+		/// 将 Fabrik 手臂 IK 的位置转换到角色的 bone space 中
+		/// 需要角色骨骼上的骨骼名称，以便将武器插口转换到该骨骼的空间，使用 hand_r 将 LeftHandSocket 转换到角色右手的空间
+		BlasterCharacter->GetMesh()->TransformToBoneSpace(
+					FName("hand_r"),
+			LeftHandTransform.GetLocation(),FRotator::ZeroRotator,
+				 OutPosition, OutRotation
+		);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }

@@ -57,6 +57,8 @@ public:
 	void SetWeaponState(EWeaponState NewState);
 	FORCEINLINE class USphereComponent* GetWeaponCollision() const { return WeaponCollision; }
 
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+
 private:
 	UFUNCTION()
 	void OnRep_WeaponState();

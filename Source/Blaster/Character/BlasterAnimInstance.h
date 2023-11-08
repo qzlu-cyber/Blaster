@@ -45,4 +45,9 @@ private:
 	float AOYaw; // Aim Offset Yaw
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	float AOPitch; // Aim Offset Pitch
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	FTransform LeftHandTransform; // Fabrik 手臂 IK 的目标位置
+
+	class AWeapon* EquippedWeapon; // 当前装备的武器
 };
