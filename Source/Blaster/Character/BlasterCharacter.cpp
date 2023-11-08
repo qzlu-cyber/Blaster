@@ -43,6 +43,8 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 初始化转身动画状态
 }
 
 // 注册需要同步的属性
@@ -99,6 +101,8 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		AOYaw = DeltaAimRotation.Yaw;
 
 		bUseControllerRotationYaw = false; // 角色静止时，不跟随控制器的旋转，只使用瞄准旋转角度来控制 AOYaw，而不受控制器旋转的影响
+
+		TurningInPlace(DeltaTime);
 	}
 
 	AOPitch = GetBaseAimRotation().Pitch;
@@ -110,6 +114,12 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		const FVector2D OutRange(-90.f, 0.f);
 		AOPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AOPitch);
 	}
+}
+
+void ABlasterCharacter::TurningInPlace(float DeltaTime)
+{
+	if (AOYaw > 90.f) TurnInPlace = ETurnInPlace::ETIP_Right;
+	else if (AOYaw < -90.f) TurnInPlace = ETurnInPlace::ETIP_Left;
 }
 
 // Called to bind functionality to input

@@ -32,6 +32,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bWeaponEquipped = BlasterCharacter->IsWeaponEquipped();
 	bIsCrouched = BlasterCharacter->bIsCrouched;
 	bIsAiming = BlasterCharacter->IsAiming();
+	TurnInPlace = BlasterCharacter->GetTurnInPlace();
 
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation(); // 获取角色的瞄准方向。 global rotation
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity()); // 获取角色的移动方向。 local rotation

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Blaster/BlasterTypes/TurnInPlace.h"
+
 #include "CoreMinimal.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
@@ -51,6 +53,9 @@ protected:
 
 	// 配置 AimOffset
 	void AimOffset(float DeltaTime);
+
+	// 转身动画
+	void TurningInPlace(float DeltaTime);
 	
 public:	
 	void SetOverlappingWeapon(class AWeapon* Weapon);
@@ -61,6 +66,7 @@ public:
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { if (!Combat || !Combat->EquippedWeapon) return nullptr; return Combat->EquippedWeapon; }
+	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 
 private:
 	UFUNCTION()
@@ -125,4 +131,7 @@ private:
 	float AOYaw; // 静止时的 BaseAimRotation 和 静止后当前的 BaseAimRotation 的 Delta Yaw
 	float AOPitch; // 
 	FRotator StartAimRotation;
+
+	// Turn In Place
+	ETurnInPlace TurnInPlace;
 };

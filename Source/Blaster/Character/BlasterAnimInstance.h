@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Blaster/BlasterTypes/TurnInPlace.h"
+
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "BlasterAnimInstance.generated.h"
@@ -50,4 +52,7 @@ private:
 	FTransform LeftHandTransform; // Fabrik 手臂 IK 的目标位置
 
 	class AWeapon* EquippedWeapon; // 当前装备的武器
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	ETurnInPlace TurnInPlace; // 转身动画
 };
