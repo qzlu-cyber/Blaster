@@ -59,6 +59,8 @@ public:
 
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
+	void Fire();
+
 private:
 	UFUNCTION()
 	void OnRep_WeaponState();
@@ -74,4 +76,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="HUD", meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* PickupWidget;
+
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	class UAnimationAsset* FireAnimation; // 武器开火时动画
 };

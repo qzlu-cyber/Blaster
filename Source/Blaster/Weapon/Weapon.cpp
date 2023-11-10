@@ -100,6 +100,11 @@ void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)
 	if (PickupWidget) PickupWidget->SetVisibility(bShowWidget);
 }
 
+void AWeapon::Fire()
+{
+	if (FireAnimation) WeaponMesh->PlayAnimation(FireAnimation, false);
+}
+
 // 当 WeaponState 属性改变时调用
 void AWeapon::OnRep_WeaponState()
 {

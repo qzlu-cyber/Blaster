@@ -109,5 +109,10 @@ void UCombatComponent::Aiming(bool bAiming)
 
 void UCombatComponent::Fire(bool bFire)
 {
-	if (bFire) Character->PlayFireWeaponMontage(bIsAiming);
+	if (!EquippedWeapon) return;
+	if (bFire)
+	{
+		Character->PlayFireWeaponMontage(bIsAiming);
+		EquippedWeapon->Fire();
+	}
 }

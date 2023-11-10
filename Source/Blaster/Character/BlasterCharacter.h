@@ -130,7 +130,7 @@ private:
 
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
-	class UAnimMontage* FireWeaponMontage; // 开火动画
+	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;
