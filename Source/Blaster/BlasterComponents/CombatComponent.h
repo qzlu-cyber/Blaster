@@ -32,6 +32,8 @@ public:
 	void DropWeapon();
 	// 角色瞄准
 	void Aiming(bool bAiming);
+	// 角色开火
+	void Fire(bool bFire);
 
 private:
 	UFUNCTION()

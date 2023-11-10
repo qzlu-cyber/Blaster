@@ -207,6 +207,11 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aiming);
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Aiming);
 		}
+		if (FireAction)
+		{
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Fire);
+			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Fire);
+		}
 	}
 
 }
@@ -268,6 +273,29 @@ void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 	{
 		if (HasAuthority()) Combat->Aiming(false);
 		else ServerAiming(false);
+	}
+}
+
+void ABlasterCharacter::Fire(const FInputActionValue& Value)
+{
+	if (Combat)
+	{
+		// 开火和战斗有关，交给 CombatComponent 处理
+		if (Value.GetMagnitude() > 0.f) Combat->Fire(true);
+		else Combat->Fire(false);
+	}
+}
+
+void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
+{
+	if (!Combat && !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		const FName Section = bAiming ? FName("Rifle_Hip") : FName("Rifle_Aim"); // 根据是否瞄准跳转到对应的 Section
+		AnimInstance->Montage_JumpToSection(Section);
 	}
 }
 

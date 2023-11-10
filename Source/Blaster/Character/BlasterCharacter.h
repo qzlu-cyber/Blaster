@@ -51,6 +51,9 @@ protected:
 	// 瞄准
 	void Aiming(const FInputActionValue& Value);
 
+	// 开火
+	void Fire(const FInputActionValue& Value);
+
 	// 配置 AimOffset
 	void AimOffset(float DeltaTime);
 
@@ -67,6 +70,8 @@ public:
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { if (!Combat || !Combat->EquippedWeapon) return nullptr; return Combat->EquippedWeapon; }
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
+
+	void PlayFireWeaponMontage(bool bAiming);
 
 private:
 	UFUNCTION()
@@ -119,6 +124,13 @@ private:
 	// Aiming
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* AimAction;
+	// Fire
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* FireAction;
+
+	// Montages
+	UPROPERTY(EditAnywhere, Category=Combat)
+	class UAnimMontage* FireWeaponMontage; // 开火动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;

@@ -106,3 +106,8 @@ void UCombatComponent::Aiming(bool bAiming)
 
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
 }
+
+void UCombatComponent::Fire(bool bFire)
+{
+	if (bFire) Character->PlayFireWeaponMontage(bIsAiming);
+}
