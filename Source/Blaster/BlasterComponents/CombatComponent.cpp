@@ -8,6 +8,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -40,6 +41,40 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	FHitResult HitResult;
+	TraceUnderCrosshair(HitResult);
+}
+
+void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
+{
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+		FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+		// 将准星的坐标转为世界坐标
+		FVector CrosshairWorldPosition, CrosshairWorldDirection;
+		bool DeprojectResult =  UGameplayStatics::DeprojectScreenToWorld(
+			UGameplayStatics::GetPlayerController(GetWorld(), 0),
+			CrosshairLocation,
+			CrosshairWorldPosition,
+			CrosshairWorldDirection
+		);
+		if (DeprojectResult)
+		{
+			const FVector Start = CrosshairWorldPosition;
+			const FVector End = Start + CrosshairWorldDirection * 10000.f;
+
+			GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+
+			// 如果没有击中任何东西
+			if (!HitResult.bBlockingHit) HitResult.ImpactPoint = End;
+			else DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 12.f, 12, FColor::Red);
+
+			HitTarget = HitResult.ImpactPoint;
+		}
+	}
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -122,5 +157,5 @@ void UCombatComponent::ServerFire_Implementation()
 void UCombatComponent::MulticastFire_Implementation()
 {
 	Character->PlayFireWeaponMontage(bIsAiming);
-	EquippedWeapon->Fire();
+	EquippedWeapon->Fire(HitTarget);
 }

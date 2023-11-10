@@ -97,6 +97,7 @@ private:
 	UPROPERTY(EditAnywhere, Category="HUD", BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* OverheadWidget;
 	// Actor Components
+	UPROPERTY(VisibleAnywhere, Category="Combat")
 	class UCombatComponent* Combat;
 
 	/// Input

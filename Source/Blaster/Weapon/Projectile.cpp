@@ -4,6 +4,7 @@
 #include "Projectile.h"
 
 #include "Components/BoxComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 // Sets default values
 AProjectile::AProjectile()
@@ -12,12 +13,17 @@ AProjectile::AProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-	RootComponent = CollisionBox; // 设置 CollisionBox 为根组件
+	SetRootComponent(CollisionBox); // 设置 CollisionBox 为根组件
 	CollisionBox->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic); // 子弹要飞行，设置碰撞类型为 WorldDynamic
 	CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 设置碰撞检测和物理模拟
 	CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore); // 忽略所有碰撞
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block); // 响应 Visibility 碰撞
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block); // 响应 WorldStatic 碰撞
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileMovementComponent->InitialSpeed = 15000.f; // 设置初始速度
+	ProjectileMovementComponent->MaxSpeed = 15000.f; // 设置最大速度
+	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 设置飞行时旋转
 }
 
 // Called when the game starts or when spawned

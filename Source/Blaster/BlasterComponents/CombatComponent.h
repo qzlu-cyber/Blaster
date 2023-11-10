@@ -25,6 +25,9 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// 从准星发射跟踪射线
+	void TraceUnderCrosshair(FHitResult& HitResult);
+
 public:	
 	// 角色拾取武器
 	void EquipWeapon(class AWeapon* WeaponToEquip);
@@ -59,6 +62,8 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
+
+	FVector HitTarget; // 准星射线击中的目标
 
 	friend class ABlasterCharacter;
 };
