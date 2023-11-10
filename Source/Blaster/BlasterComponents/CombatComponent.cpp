@@ -34,16 +34,13 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 }
 
 // Called every frame
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	FHitResult HitResult;
-	TraceUnderCrosshair(HitResult);
 }
 
 void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
@@ -67,12 +64,6 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
 			const FVector End = Start + CrosshairWorldDirection * 10000.f;
 
 			GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
-
-			// 如果没有击中任何东西
-			if (!HitResult.bBlockingHit) HitResult.ImpactPoint = End;
-			else DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 12.f, 12, FColor::Red);
-
-			HitTarget = HitResult.ImpactPoint;
 		}
 	}
 }
@@ -145,17 +136,28 @@ void UCombatComponent::Aiming(bool bAiming)
 void UCombatComponent::Fire(bool bFire)
 {
 	if (!EquippedWeapon) return;
-	if (bFire) ServerFire(); // 从 client 端调用 server 类型的 RPC，将在 server 端执行
+	
+	// 从 client 端调用 server 类型的 RPC，将在 server 端执行
+	if (bFire)
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshair(HitResult);
+		/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
+		/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+		/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+		/// 再由服务端 Replicates 数据并同步给客户端
+		ServerFire(HitResult.ImpactPoint);
+	}
 }
 
-void UCombatComponent::ServerFire_Implementation()
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	// 从 server 端调用 NetMulticast 类型的 RPC，将在 server 和所有 client 上执行
-	MulticastFire();
+	MulticastFire(TraceHitTarget);
 }
 
-void UCombatComponent::MulticastFire_Implementation()
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	Character->PlayFireWeaponMontage(bIsAiming);
-	EquippedWeapon->Fire(HitTarget);
+	EquippedWeapon->Fire(TraceHitTarget);
 }

@@ -45,9 +45,9 @@ private:
 	void OnRep_IsAiming(bool bLastIsAiming);
 
 	UFUNCTION(Server, Reliable)
-	void ServerFire();
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFire();
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
@@ -62,8 +62,6 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
-
-	FVector HitTarget; // 准星射线击中的目标
 
 	friend class ABlasterCharacter;
 };

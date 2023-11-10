@@ -10,6 +10,9 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
+	// 只允许服务器端生成子弹，再通过服务器将子弹同步到客户端
+	if (!HasAuthority()) return;
+
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 
 	/// 生成子弹

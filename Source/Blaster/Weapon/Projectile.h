@@ -29,4 +29,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* Tracer; // 子弹的粒子特效
+
+	UPROPERTY(EditAnywhere)
+	class UParticleSystemComponent* TracerComponent; // 子弹的粒子特效组件
 };
