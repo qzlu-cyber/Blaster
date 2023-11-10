@@ -3,10 +3,12 @@
 
 #include "Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Casing.h"
 
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -103,6 +105,18 @@ void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation) WeaponMesh->PlayAnimation(FireAnimation, false);
+	// 生成弹壳
+	if (CasingClass)
+	{
+		// 获取生成位置
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject"));
+		if (AmmoEjectSocket)
+		{
+			FTransform AmmoEjectTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+			UWorld* World = GetWorld();
+			if (World) World->SpawnActor<ACasing>(CasingClass, AmmoEjectTransform.GetLocation(), AmmoEjectTransform.GetRotation().Rotator());
+		}
+	}
 }
 
 // 当 WeaponState 属性改变时调用
