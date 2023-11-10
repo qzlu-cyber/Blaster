@@ -110,9 +110,17 @@ void UCombatComponent::Aiming(bool bAiming)
 void UCombatComponent::Fire(bool bFire)
 {
 	if (!EquippedWeapon) return;
-	if (bFire)
-	{
-		Character->PlayFireWeaponMontage(bIsAiming);
-		EquippedWeapon->Fire();
-	}
+	if (bFire) ServerFire(); // 从 client 端调用 server 类型的 RPC，将在 server 端执行
+}
+
+void UCombatComponent::ServerFire_Implementation()
+{
+	// 从 server 端调用 NetMulticast 类型的 RPC，将在 server 和所有 client 上执行
+	MulticastFire();
+}
+
+void UCombatComponent::MulticastFire_Implementation()
+{
+	Character->PlayFireWeaponMontage(bIsAiming);
+	EquippedWeapon->Fire();
 }

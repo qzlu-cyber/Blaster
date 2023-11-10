@@ -38,9 +38,13 @@ public:
 private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
-
 	UFUNCTION()
 	void OnRep_IsAiming(bool bLastIsAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire();
 
 private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
