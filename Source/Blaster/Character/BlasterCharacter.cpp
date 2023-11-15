@@ -43,6 +43,7 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f); // 设置角色旋转速度
 

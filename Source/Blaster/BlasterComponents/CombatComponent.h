@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Blaster/HUD/BlasterHUD.h"
+
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
@@ -73,8 +75,11 @@ private:
 	FVector HitTarget; // 击中目标的位置
 
 	/// HUD and Crosshairs
+	FHUDPackage HUDPackage;
 	float CrosshairVelocityFactor; // 准星扩散速度因子
 	float CrosshairInAirFactor; // 准星扩散空中因子
+	float CrosshairAimFactor; // 准星扩散瞄准因子
+	float CrosshairShootingFactor; // 准星扩散开火因子
 
 	/// Aiming FOV
 	float DefaultFOV; // 没有瞄准时的 FOV

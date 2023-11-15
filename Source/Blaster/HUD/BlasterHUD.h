@@ -18,6 +18,8 @@ struct FHUDPackage
 	UTexture2D* CrosshairsBottom;
 
 	float CrosshairSpread;
+
+	FLinearColor CrosshairColor;
 };
 
 /**

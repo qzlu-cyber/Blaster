@@ -3,14 +3,15 @@
 #pragma once
 
 #include "Blaster/BlasterTypes/TurnInPlace.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 
 #include "CoreMinimal.h"
-#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 

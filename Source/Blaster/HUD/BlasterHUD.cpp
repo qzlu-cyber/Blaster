@@ -66,6 +66,6 @@ void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, const FVector2D& DrawPoint,
 		0.f,
 		1.f,
 		1.f,
-		FLinearColor::White
+		HUDPackage.CrosshairColor
 	);
 }
