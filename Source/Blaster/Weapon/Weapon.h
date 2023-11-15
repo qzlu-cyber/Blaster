@@ -61,6 +61,9 @@ public:
 
 	virtual void Fire(const FVector& HitTarget);
 
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+
 private:
 	UFUNCTION()
 	void OnRep_WeaponState();
@@ -95,4 +98,10 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; // 弹壳类
+
+	/// Aiming FOV
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	float ZoomedFOV = 45.f;
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	float ZoomInterpSpeed = 20.f;
 };

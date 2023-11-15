@@ -52,6 +52,8 @@ private:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
+	void InterpFOV(float DeltaTime);
+
 private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
 	class ABlasterPlayerController* PlayerController; // 角色的 PlayerController，用于获取 HUD
@@ -73,6 +75,11 @@ private:
 	/// HUD and Crosshairs
 	float CrosshairVelocityFactor; // 准星扩散速度因子
 	float CrosshairInAirFactor; // 准星扩散空中因子
+
+	/// Aiming FOV
+	float DefaultFOV; // 没有瞄准时的 FOV
+	float CurrentFOV; // 当前的 FOV
+	float ZoomInterpSpeed = 20.f; // 瞄准时的插值速度
 
 	friend class ABlasterCharacter;
 };

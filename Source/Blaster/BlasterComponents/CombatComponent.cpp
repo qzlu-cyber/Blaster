@@ -11,6 +11,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -36,7 +37,16 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	if (Character)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+
+		if (Character->GetFollowCamera())
+		{
+			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
+	}
 }
 
 // Called every frame
@@ -50,6 +60,8 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		FHitResult HitResult;
 		TraceUnderCrosshair(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		InterpFOV(DeltaTime);
 	}
 }
 
@@ -126,6 +138,19 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
+}
+
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (!EquippedWeapon) return;
+
+	if (bIsAiming)
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+	else
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed); // 恢复 FOV 使用统一插值速度
+
+	if (Character && Character->GetFollowCamera())
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()

@@ -76,6 +76,8 @@ public:
 
 	FVector GetHitTarget() const;
 
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -96,7 +98,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class USpringArmComponent* CameraBoom;
 	UPROPERTY(VisibleAnywhere, Category=Camera)
-	class UCameraComponent* FollowCamera;
+	UCameraComponent* FollowCamera;
 	UPROPERTY(EditAnywhere, Category="HUD", BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* OverheadWidget;
 	// Actor Components
