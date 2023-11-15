@@ -30,7 +30,7 @@ void ACasing::BeginPlay()
 
 	CasingMesh->OnComponentHit.AddDynamic(this, &ACasing::OnHit);
 
-	CasingMesh->AddImpulse(GetActorLocation() * ShellEjectImpulse);
+	CasingMesh->AddImpulse(GetActorForwardVector() * ShellEjectImpulse);
 }
 
 // Called every frame
