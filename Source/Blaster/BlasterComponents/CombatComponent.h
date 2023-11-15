@@ -28,6 +28,9 @@ protected:
 	// 从准星发射跟踪射线
 	void TraceUnderCrosshair(FHitResult& HitResult);
 
+	// 设置绘制准星的 Texture，每帧都要更新
+	void SetHUDCrosshairs(float DeltaTime);
+
 public:	
 	// 角色拾取武器
 	void EquipWeapon(class AWeapon* WeaponToEquip);
@@ -51,6 +54,8 @@ private:
 
 private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
+	class ABlasterPlayerController* PlayerController; // 角色的 PlayerController，用于获取 HUD
+	class ABlasterHUD* HUD; // 角色的 HUD，用于设置准星的 Texture
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon; // 当前装备的武器

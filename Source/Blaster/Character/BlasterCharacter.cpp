@@ -31,7 +31,7 @@ ABlasterCharacter::ABlasterCharacter()
 	CameraBoom->bUsePawnControlRotation = true; // 设置 spring arm 的旋转跟随 pawn 的旋转
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom);
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; // 设置 camera 不跟随 pawn 的旋转，而是跟随 spring arm 的旋转
 
 	bUseControllerRotationYaw = false; // 设置 pawn 不跟随控制器的旋转
@@ -43,6 +43,8 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f); // 设置角色旋转速度
 
 	TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 初始化转身动画状态
 
@@ -178,6 +180,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 		if (JumpAction)
 		{
+			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 			EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Jump);
 		}
 		if (TurnAction)
@@ -260,6 +263,12 @@ void ABlasterCharacter::Crouching(const FInputActionValue& Value)
 {
 	if (bIsCrouched) UnCrouch();
 	else Crouch();
+}
+
+void ABlasterCharacter::Jump()
+{
+	if (bIsCrouched) UnCrouch();
+	else Super::Jump();
 }
 
 void ABlasterCharacter::Aiming(const FInputActionValue& Value)

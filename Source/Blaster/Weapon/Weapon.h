@@ -65,6 +65,19 @@ private:
 	UFUNCTION()
 	void OnRep_WeaponState();
 
+public:
+	/// 绘制准星的材质
+	UPROPERTY(EditAnywhere, Category="Crosshire")
+	class UTexture2D* CrosshiresCenter;
+	UPROPERTY(EditAnywhere, Category="Crosshire")
+	UTexture2D* CrosshiresTop;
+	UPROPERTY(EditAnywhere, Category="Crosshire")
+	UTexture2D* CrosshiresBottom;
+	UPROPERTY(EditAnywhere, Category="Crosshire")
+	UTexture2D* CrosshiresLeft;
+	UPROPERTY(EditAnywhere, Category="Crosshire")
+	UTexture2D* CrosshiresRight;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;

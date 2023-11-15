@@ -2,9 +2,11 @@
 
 
 #include "CombatComponent.h"
-
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/HUD/BlasterHUD.h"
+
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -41,6 +43,8 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SetHUDCrosshairs(DeltaTime);
 }
 
 void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
@@ -64,6 +68,38 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
 			const FVector End = Start + CrosshairWorldDirection * 10000.f;
 
 			GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
+		}
+	}
+}
+
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	if (!Character || !Character->Controller) return;
+
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		HUD = HUD == nullptr ? Cast<ABlasterHUD>(PlayerController->GetHUD()) : HUD;
+		if (HUD)
+		{
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon)
+			{
+				HUDPackage.CrosshiresCenter = EquippedWeapon->CrosshiresCenter;
+				HUDPackage.CrosshiresTop = EquippedWeapon->CrosshiresTop;
+				HUDPackage.CrosshiresBottom = EquippedWeapon->CrosshiresBottom;
+				HUDPackage.CrosshiresLeft = EquippedWeapon->CrosshiresLeft;
+				HUDPackage.CrosshiresRight = EquippedWeapon->CrosshiresRight;
+			}
+			else
+			{
+				HUDPackage.CrosshiresCenter = nullptr;
+				HUDPackage.CrosshiresTop = nullptr;
+				HUDPackage.CrosshiresBottom = nullptr;
+				HUDPackage.CrosshiresLeft = nullptr;
+				HUDPackage.CrosshiresRight = nullptr;
+			}
+			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
 }

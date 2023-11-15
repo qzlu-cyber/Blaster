@@ -45,8 +45,9 @@ protected:
 	void EquipWeapon(const FInputActionValue& Value);
 	void DropWeapon(const FInputActionValue& Value);
 
-	// 下蹲
+	// 下蹲 / 跳跃
 	void Crouching(const FInputActionValue& Value);
+	virtual void Jump() override;
 
 	// 瞄准
 	void Aiming(const FInputActionValue& Value);
