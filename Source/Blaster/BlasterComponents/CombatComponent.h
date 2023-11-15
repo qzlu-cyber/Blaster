@@ -68,5 +68,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
 
+	FVector HitTarget; // 击中目标的位置
+
+	/// HUD and Crosshairs
+	float CrosshairVelocityFactor; // 准星扩散速度因子
+	float CrosshairInAirFactor; // 准星扩散空中因子
+
 	friend class ABlasterCharacter;
 };

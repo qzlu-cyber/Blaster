@@ -74,6 +74,8 @@ public:
 
 	void PlayFireWeaponMontage(bool bAiming);
 
+	FVector GetHitTarget() const;
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);

@@ -13,22 +13,47 @@ void ABlasterHUD::DrawHUD()
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 		const FVector2D ViewportCenter = FVector2D(ViewportSize.X / 2, ViewportSize.Y / 2);
 
-		if (HUDPackage.CrosshiresCenter) DrawCrosshire(HUDPackage.CrosshiresCenter, ViewportCenter);
-		if (HUDPackage.CrosshiresLeft) DrawCrosshire(HUDPackage.CrosshiresLeft, ViewportCenter);
-		if (HUDPackage.CrosshiresRight) DrawCrosshire(HUDPackage.CrosshiresRight, ViewportCenter);
-		if (HUDPackage.CrosshiresTop) DrawCrosshire(HUDPackage.CrosshiresTop, ViewportCenter);
-		if (HUDPackage.CrosshiresBottom) DrawCrosshire(HUDPackage.CrosshiresBottom, ViewportCenter);
+		const float SpreadScaled = CrosshairSpreadMax * HUDPackage.CrosshairSpread;
+
+		if (HUDPackage.CrosshairsCenter)
+		{
+			const FVector2D Spread(0.f, 0.f);
+			DrawCrosshair(HUDPackage.CrosshairsCenter, ViewportCenter, Spread);
+		}
+		if (HUDPackage.CrosshairsLeft)
+		{
+			const FVector2D Spread(-SpreadScaled, 0.f);
+			DrawCrosshair(HUDPackage.CrosshairsLeft, ViewportCenter, Spread);
+		}
+		
+		if (HUDPackage.CrosshairsRight)
+		{
+			const FVector2D Spread(SpreadScaled, 0.f);
+			DrawCrosshair(HUDPackage.CrosshairsRight, ViewportCenter, Spread);
+		}
+		
+		if (HUDPackage.CrosshairsTop)
+		{
+			const FVector2D Spread(0.f, SpreadScaled);
+			DrawCrosshair(HUDPackage.CrosshairsTop, ViewportCenter, Spread);
+		}
+		
+		if (HUDPackage.CrosshairsBottom)
+		{
+			const FVector2D Spread(0.f, -SpreadScaled);
+			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
+		}
 	}
 }
 
-void ABlasterHUD::DrawCrosshire(UTexture2D* Texture, const FVector2D& DrawPoint)
+void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, const FVector2D& DrawPoint, const FVector2D& Spread)
 {
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
 
 	const FVector2D DrawPosition = FVector2D(
-		DrawPoint.X - (TextureWidth / 2.f),
-		DrawPoint.Y - (TextureHeight / 2.f)
+		DrawPoint.X - (TextureWidth / 2.f) + Spread.X,
+		DrawPoint.Y - (TextureHeight / 2.f + Spread.Y)
 	);
 
 	DrawTexture(

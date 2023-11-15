@@ -45,6 +45,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	SetHUDCrosshairs(DeltaTime);
+	if (Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshair(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+	}
 }
 
 void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
@@ -56,13 +62,13 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
 		FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 		// 将准星的坐标转为世界坐标
 		FVector CrosshairWorldPosition, CrosshairWorldDirection;
-		bool DeprojectResult =  UGameplayStatics::DeprojectScreenToWorld(
+		bool bScreenToWorld =  UGameplayStatics::DeprojectScreenToWorld(
 			UGameplayStatics::GetPlayerController(GetWorld(), 0),
 			CrosshairLocation,
 			CrosshairWorldPosition,
 			CrosshairWorldDirection
 		);
-		if (DeprojectResult)
+		if (bScreenToWorld)
 		{
 			const FVector Start = CrosshairWorldPosition;
 			const FVector End = Start + CrosshairWorldDirection * 10000.f;
@@ -85,20 +91,38 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
-				HUDPackage.CrosshiresCenter = EquippedWeapon->CrosshiresCenter;
-				HUDPackage.CrosshiresTop = EquippedWeapon->CrosshiresTop;
-				HUDPackage.CrosshiresBottom = EquippedWeapon->CrosshiresBottom;
-				HUDPackage.CrosshiresLeft = EquippedWeapon->CrosshiresLeft;
-				HUDPackage.CrosshiresRight = EquippedWeapon->CrosshiresRight;
+				HUDPackage.CrosshairsCenter = EquippedWeapon->CrosshairsCenter;
+				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
+				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
+				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
+				HUDPackage.CrosshairsRight = EquippedWeapon->CrosshairsRight;
 			}
 			else
 			{
-				HUDPackage.CrosshiresCenter = nullptr;
-				HUDPackage.CrosshiresTop = nullptr;
-				HUDPackage.CrosshiresBottom = nullptr;
-				HUDPackage.CrosshiresLeft = nullptr;
-				HUDPackage.CrosshiresRight = nullptr;
+				HUDPackage.CrosshairsCenter = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+				HUDPackage.CrosshairsBottom = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
 			}
+			/// 计算绘制放大准星的偏移量
+			/// 根据角色的速度映射，[0, 600] -> [0, 1]
+			const FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			const FVector2D VelocityMultiplierRange(0.f, 1.f);
+			FVector Velocity = Character->GetVelocity();
+			Velocity.Z = 0;
+			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+			if (Character->GetMovementComponent()->IsFalling())
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+			}
+			else
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 30.f);
+			}
+
+			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}

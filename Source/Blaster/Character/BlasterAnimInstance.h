@@ -55,4 +55,10 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	ETurnInPlace TurnInPlace; // 转身动画
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	FRotator RightHandRotation; // 右手的旋转，用于将武器的枪口旋转到准星的位置
+
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	bool bIsLocallyControlled; // 是否是本地控制的角色
 };

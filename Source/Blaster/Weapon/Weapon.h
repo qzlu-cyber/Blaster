@@ -68,15 +68,15 @@ private:
 public:
 	/// 绘制准星的材质
 	UPROPERTY(EditAnywhere, Category="Crosshire")
-	class UTexture2D* CrosshiresCenter;
+	class UTexture2D* CrosshairsCenter;
 	UPROPERTY(EditAnywhere, Category="Crosshire")
-	UTexture2D* CrosshiresTop;
+	UTexture2D* CrosshairsTop;
 	UPROPERTY(EditAnywhere, Category="Crosshire")
-	UTexture2D* CrosshiresBottom;
+	UTexture2D* CrosshairsBottom;
 	UPROPERTY(EditAnywhere, Category="Crosshire")
-	UTexture2D* CrosshiresLeft;
+	UTexture2D* CrosshairsLeft;
 	UPROPERTY(EditAnywhere, Category="Crosshire")
-	UTexture2D* CrosshiresRight;
+	UTexture2D* CrosshairsRight;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
