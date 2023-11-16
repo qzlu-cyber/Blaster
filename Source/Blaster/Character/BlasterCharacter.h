@@ -61,6 +61,9 @@ protected:
 
 	// 处理原地转向的逻辑
 	void TurningInPlace(float DeltaTime);
+
+	// 播放受到攻击时的动画
+	void PlayHitReactMontage();
 	
 public:	
 	void SetOverlappingWeapon(class AWeapon* Weapon);
@@ -78,6 +81,10 @@ public:
 	FVector GetHitTarget() const;
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	// 利用多播 RPC 使所有 client 和 server 都播放 HitReactMontage
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
 
 private:
 	UFUNCTION()
@@ -140,6 +147,8 @@ private:
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* HitReactMontage; // 角色受到攻击时动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;

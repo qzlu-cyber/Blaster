@@ -2,6 +2,8 @@
 
 
 #include "Projectile.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Blaster.h"
 
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -23,6 +25,9 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore); // 忽略所有碰撞
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block); // 响应 Visibility 碰撞
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block); // 响应 WorldStatic 碰撞
+	/// 将碰撞体设为 SkeletaMesh 而非 CapsuleComponent
+	//CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block); // 响应 Pawn 碰撞
+	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletaMesh, ECR_Block); // 响应 SkeletalMesh 碰撞
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->InitialSpeed = 15000.f; // 设置初始速度
@@ -63,6 +68,13 @@ void AProjectile::Tick(float DeltaTime)
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& HitResult)
 {
+	// 判断是否命中角色
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if (BlasterCharacter)
+	{
+		BlasterCharacter->MulticastHit(); // server 端调用多播 RPC，在 server 端和所有 client 端都会播放受到攻击时的动画
+	}
+	
 	Destroy();
 }
 

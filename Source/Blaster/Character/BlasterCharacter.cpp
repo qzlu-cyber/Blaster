@@ -4,6 +4,7 @@
 #include "BlasterCharacter.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/Blaster.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -41,6 +42,9 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
 
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
+
+	GetMesh()->SetCollisionObjectType(ECC_SkeletaMesh); // 设置 mesh 的碰撞类型为 SkeletalMesh
+	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -330,6 +334,19 @@ void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 	}
 }
 
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if (!Combat && !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		const FName Section("FromFront");
+		AnimInstance->Montage_JumpToSection(Section);
+	}
+}
+
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
 void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
@@ -385,6 +402,11 @@ void ABlasterCharacter::SeverDropWeapon_Implementation()
 void ABlasterCharacter::ServerAiming_Implementation(bool bIsAiming)
 {
 	if (Combat) Combat->Aiming(bIsAiming);
+}
+
+void ABlasterCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
 }
 
 bool ABlasterCharacter::IsWeaponEquipped() const
