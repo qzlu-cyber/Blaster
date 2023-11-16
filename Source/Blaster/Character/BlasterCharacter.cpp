@@ -131,6 +131,27 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	}
 }
 
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	// 设置只在 owner 端执行
+	if (!IsLocallyControlled()) return;
+
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < HideCameraDistance)
+	{
+		GetMesh()->SetVisibility(false);
+
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+	}
+}
+
 void ABlasterCharacter::TurningInPlace(float DeltaTime)
 {
 	if (AOYaw > 90.f) TurnInPlace = ETurnInPlace::ETIP_Right;

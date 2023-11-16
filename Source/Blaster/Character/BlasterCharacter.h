@@ -94,6 +94,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerAiming(bool bIsAiming);
 
+	void HideCameraIfCharacterClose();
+
 private:
 	/// Components
 	UPROPERTY(VisibleAnywhere, Category=Camera)
@@ -154,4 +156,8 @@ private:
 	// Turn In Place
 	ETurnInPlace TurnInPlace;
 	float InterpAOYaw;
+
+	// Hide Camera when Character is close
+	UPROPERTY(EditAnywhere, Category="Camera")
+	float HideCameraDistance = 200.f;
 };
