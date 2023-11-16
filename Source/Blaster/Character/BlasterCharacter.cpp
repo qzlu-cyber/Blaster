@@ -6,6 +6,7 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/GameModes/BlasterGameMode.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -250,6 +251,24 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth); // 更新血量
 	UpdateHealthHUD(); // 更新血条
 	PlayHitReactMontage(); // 播放受到攻击时的动画
+
+	if (Health == 0.f)
+	{
+		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+		if (BlasterGameMode)
+		{
+			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+			if (BlasterPlayerController)
+			{
+				ABlasterPlayerController* AttackerPlayerController = Cast<ABlasterPlayerController>(InstigatedBy);
+				BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerPlayerController);
+			}
+		}
+	}
+}
+
+void ABlasterCharacter::Elim()
+{
 }
 
 // Called to bind functionality to input

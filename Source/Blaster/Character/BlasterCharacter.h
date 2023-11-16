@@ -115,6 +115,9 @@ private:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	/// 处理角色死亡时的逻辑
+	void Elim();
+	
 private:
 	/// PlayerController
 	class ABlasterPlayerController* BlasterPlayerController;
