@@ -21,6 +21,7 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void CalculateAOPitch();
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -61,6 +62,8 @@ protected:
 
 	// 处理原地转向的逻辑
 	void TurningInPlace(float DeltaTime);
+	// SimulateProxy 动画会有卡顿，单独处理其转向逻辑
+	void SimulateProxyTurningInPlace();
 
 	// 播放受到攻击时的动画
 	void PlayHitReactMontage();
@@ -75,6 +78,7 @@ public:
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { if (!Combat || !Combat->EquippedWeapon) return nullptr; return Combat->EquippedWeapon; }
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
+	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 
 	void PlayFireWeaponMontage(bool bAiming);
 
@@ -89,6 +93,9 @@ public:
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+	// 当 RootComponent's position and velocity 发生变化被 replicate 时，会调用该函数
+	virtual void OnRep_ReplicatedMovement() override;
 
 	/// Remote Procedure Calls: 在一台机器上调用某些操作，但在另一台机器上执行
 	/// 已经通过 Overlapping 实现了将变量从 server 端 replicate 到 client 端，即从 server 端向 client 端同步数据
@@ -165,6 +172,12 @@ private:
 	// Turn In Place
 	ETurnInPlace TurnInPlace;
 	float InterpAOYaw;
+	bool bRotateRootBone; // SimulateProxy 不使用蓝图中的 RotateRootBone 播放动画
+	FRotator ProxyRotationLastFrame; // SimulateProxy 上一帧的旋转
+	FRotator ProxyRotation; // SimulateProxy 当前的旋转
+	float ProxyYaw; // SimulateProxy 的 Yaw
+	float TurnThreshold = 10.f; // 角色转身的阈值
+	float TimeSinceLastMovementReplication; // 跟踪上一次移动同步的时间，达到一定阈值手动同步移动
 
 	// Hide Camera when Character is close
 	UPROPERTY(EditAnywhere, Category="Camera")

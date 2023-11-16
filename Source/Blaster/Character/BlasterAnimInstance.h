@@ -55,6 +55,8 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	ETurnInPlace TurnInPlace; // 转身动画
+	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
+	bool bRotateRootBone; // 是否旋转角色的根骨骼，SimulateProxy 不使用旋转角色的根骨骼来处理动画
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	FRotator RightHandRotation; // 右手的旋转，用于将武器的枪口旋转到准星的位置

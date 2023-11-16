@@ -83,7 +83,30 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AimOffset(DeltaTime);
+	// 如果不是 SimulatedProxy 且是受控制的角色，执行 AimOffset
+	if (GetLocalRole() > ROLE_SimulatedProxy && IsLocallyControlled()) AimOffset(DeltaTime);
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f) OnRep_ReplicatedMovement();
+
+		CalculateAOPitch();
+	}
+
+	HideCameraIfCharacterClose();
+}
+
+void ABlasterCharacter::CalculateAOPitch()
+{
+	AOPitch = GetBaseAimRotation().Pitch;
+	/// AOPitch 会在网络同步中压缩为 unsinged 类型，导致负数符号丢失
+	/// 对 AOPitch 进行修正，使得其范围为 [-90, 90]
+	if (AOPitch > 90.f && !IsLocallyControlled())
+	{
+		const FVector2D InRange(270.f, 360.f);
+		const FVector2D OutRange(-90.f, 0.f);
+		AOPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AOPitch);
+	}
 }
 
 void ABlasterCharacter::AimOffset(float DeltaTime)
@@ -98,6 +121,8 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	
 	if (Speed > 0.f || bIsInAir)
 	{
+		bRotateRootBone = false;
+		
 		StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AOYaw = 0.f;
 
@@ -106,6 +131,8 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	// 只有角色静止时才会使用 AimOffset
 	if (Speed == 0.f && !bIsInAir)
 	{
+		bRotateRootBone = true;
+		
 		const FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		const FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
 		AOYaw = DeltaAimRotation.Yaw;
@@ -124,36 +151,7 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		TurningInPlace(DeltaTime);
 	}
 
-	AOPitch = GetBaseAimRotation().Pitch;
-	/// AOPitch 会在网络同步中压缩为 unsinged 类型，导致负数符号丢失
-	/// 对 AOPitch 进行修正，使得其范围为 [-90, 90]
-	if (AOPitch > 90.f && !IsLocallyControlled())
-	{
-		const FVector2D InRange(270.f, 360.f);
-		const FVector2D OutRange(-90.f, 0.f);
-		AOPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AOPitch);
-	}
-}
-
-void ABlasterCharacter::HideCameraIfCharacterClose()
-{
-	// 设置只在 owner 端执行
-	if (!IsLocallyControlled()) return;
-
-	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < HideCameraDistance)
-	{
-		GetMesh()->SetVisibility(false);
-
-		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
-			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
-	}
-	else
-	{
-		GetMesh()->SetVisibility(true);
-
-		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
-			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
-	}
+	CalculateAOPitch();
 }
 
 void ABlasterCharacter::TurningInPlace(float DeltaTime)
@@ -173,6 +171,62 @@ void ABlasterCharacter::TurningInPlace(float DeltaTime)
 			TurnInPlace = ETurnInPlace::ETIP_NotTurning;
 			StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f); // 更新 StartAimRotation 用于下一次转身
 		}
+	}
+}
+
+void ABlasterCharacter::SimulateProxyTurningInPlace()
+{
+	if (!Combat || !Combat->EquippedWeapon) return;
+
+	bRotateRootBone = false;
+
+	// 当开始移动时如果没有把 TurnInPlace 设置为 NotTurning，会出现角色滑行的问题
+	// 消除快速转动角色并移动后出现滑行的问题
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	const float Speed = Velocity.Size();
+	if (Speed > 0.f)
+	{
+		TurnInPlace = ETurnInPlace::ETIP_NotTurning;
+		
+		return;
+	}
+
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
+
+	if (FMath::Abs(ProxyYaw) > TurnThreshold)
+	{
+		if (ProxyYaw > TurnThreshold) TurnInPlace = ETurnInPlace::ETIP_Right;
+		else if (ProxyYaw < -TurnThreshold) TurnInPlace = ETurnInPlace::ETIP_Left;
+		else TurnInPlace = ETurnInPlace::ETIP_NotTurning;
+
+		return;
+	}
+	
+	TurnInPlace = ETurnInPlace::ETIP_NotTurning;
+}
+
+
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	// 设置只在 owner 端执行
+	if (!IsLocallyControlled()) return;
+
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < HideCameraDistance)
+	{
+		GetMesh()->SetVisibility(false);
+
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 	}
 }
 
@@ -384,6 +438,16 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	if (OverlappingWeapon) OverlappingWeapon->ShowWeaponPickupWidget(true);
 	if (LastWeapon) LastWeapon->ShowWeaponPickupWidget(false);
+}
+
+// 仅在 movement component 的位置和速度发生变化时才会调用，一旦停止移动 SimulateProxyTurningInPlace() 就不会被调用
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+
+	SimulateProxyTurningInPlace();
+
+	TimeSinceLastMovementReplication = 0.f; // 重置时间
 }
 
 // 当 Client 调用 RPC 时， Server 端实际执行的操作
