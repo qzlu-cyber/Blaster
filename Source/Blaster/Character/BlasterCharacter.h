@@ -30,6 +30,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PostInitializeComponents() override;
+	void UpdateHealthHUD();
 
 protected:
 	// Called when the game starts or when spawned
@@ -86,16 +87,16 @@ public:
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	// 利用多播 RPC 使所有 client 和 server 都播放 HitReactMontage
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	// 当 RootComponent's position and velocity 发生变化被 replicate 时，会调用该函数
 	virtual void OnRep_ReplicatedMovement() override;
+
+	// 当 Health 发生变化被 replicate 时，会调用该函数
+	UFUNCTION()
+	void OnRep_Health();
 
 	/// Remote Procedure Calls: 在一台机器上调用某些操作，但在另一台机器上执行
 	/// 已经通过 Overlapping 实现了将变量从 server 端 replicate 到 client 端，即从 server 端向 client 端同步数据
@@ -109,6 +110,10 @@ private:
 	void ServerAiming(bool bIsAiming);
 
 	void HideCameraIfCharacterClose();
+
+	/// 处理受到伤害时的逻辑
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 private:
 	/// PlayerController
@@ -189,6 +194,6 @@ private:
 	/// Player Stats
 	UPROPERTY(EditAnywhere, Category="Player Stats")
 	float MaxHealth = 100.f; // 最大血量
-	UPROPERTY(EditAnywhere, Category="Player Stats")
+	UPROPERTY(ReplicatedUsing=OnRep_Health, EditAnywhere, Category="Player Stats")
 	float Health = 100.f; // 当前血量
 };

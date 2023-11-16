@@ -64,6 +64,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly); // 只在 owner 端同步
+	DOREPLIFETIME(ABlasterCharacter, Health);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -73,13 +74,21 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (Combat) Combat->Character = this;
 }
 
+void ABlasterCharacter::UpdateHealthHUD()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController) BlasterPlayerController->SetBlasterHealthHUD(Health, MaxHealth); // 设置 HUD 的血条
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
-	if (BlasterPlayerController) BlasterPlayerController->SetBlasterHealthHUD(Health, MaxHealth); // 设置 HUD 的血条
+	UpdateHealthHUD(); // 初始化血条
+
+	// 由 server 端统一处理受到伤害的逻辑
+	if (HasAuthority()) OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage); // 注册受到伤害时的回调函数
 }
 
 // Called every frame
@@ -232,6 +241,15 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 	}
+}
+
+// 只在 server 端执行，所以 更新血条 和 播放受到攻击时的动画 操作放到 OnRep_Health 中
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatedBy, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth); // 更新血量
+	UpdateHealthHUD(); // 更新血条
+	PlayHitReactMontage(); // 播放受到攻击时的动画
 }
 
 // Called to bind functionality to input
@@ -454,6 +472,12 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f; // 重置时间
 }
 
+void ABlasterCharacter::OnRep_Health()
+{
+	UpdateHealthHUD(); // 更新血条
+	PlayHitReactMontage(); // 播放受到攻击时的动画
+}
+
 // 当 Client 调用 RPC 时， Server 端实际执行的操作
 void ABlasterCharacter::ServerEquipWeapon_Implementation()
 {
@@ -470,11 +494,6 @@ void ABlasterCharacter::SeverDropWeapon_Implementation()
 void ABlasterCharacter::ServerAiming_Implementation(bool bIsAiming)
 {
 	if (Combat) Combat->Aiming(bIsAiming);
-}
-
-void ABlasterCharacter::MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
 }
 
 bool ABlasterCharacter::IsWeaponEquipped() const

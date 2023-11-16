@@ -68,13 +68,6 @@ void AProjectile::Tick(float DeltaTime)
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& HitResult)
 {
-	// 判断是否命中角色
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (BlasterCharacter)
-	{
-		BlasterCharacter->MulticastHit(); // server 端调用多播 RPC，在 server 端和所有 client 端都会播放受到攻击时的动画
-	}
-	
 	Destroy();
 }
 
