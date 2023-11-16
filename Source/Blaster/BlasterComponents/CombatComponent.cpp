@@ -160,6 +160,29 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 }
 
+void UCombatComponent::StartFireTimer()
+{
+	if (!EquippedWeapon && !Character) return;
+
+	// 启动计时器，在 FireDelay 时间后执行 FireTimerFinished()
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimerHandle,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		EquippedWeapon->GetFireDelay()
+	);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	/// 无论是否按下鼠标左键开火或是否使用连发武器，都要先将 bCanFire 设置为 true
+	/// 这样，如果使用的是半自动或非自动武器，仍会在 FireDelay 后将 bCanFire 设置为 true
+	/// 对于非自动武器，必须等待一个强制延迟后才能再次开火
+	bCanFire = true;
+	// 如果按下开火键且武器是连发武器
+	if (bIsFire && EquippedWeapon->GetAutomaticFire()) Shoot();
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -225,23 +248,31 @@ void UCombatComponent::Aiming(bool bAiming)
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
 }
 
-void UCombatComponent::Fire(bool bFire)
+void UCombatComponent::Shoot()
 {
-	if (!EquippedWeapon) return;
-	
-	// 从 client 端调用 server 类型的 RPC，将在 server 端执行
-	if (bFire)
+	if (bCanFire)
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshair(HitResult);
+		bCanFire = false;
 		/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
 		/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
 		/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
 		/// 再由服务端 Replicates 数据并同步给客户端
-		ServerFire(HitResult.ImpactPoint);
-		
+		ServerFire(HitTarget);
+
 		CrosshairShootingFactor = 0.75f;
+
+		StartFireTimer(); // 启动计时器
 	}
+}
+
+void UCombatComponent::Fire(bool bFire)
+{
+	if (!EquippedWeapon) return;
+
+	bIsFire = bFire;
+	
+	// 从 client 端调用 server 类型的 RPC，将在 server 端执行
+	if (bIsFire) Shoot();
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)

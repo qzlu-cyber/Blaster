@@ -40,6 +40,7 @@ public:
 	void DropWeapon();
 	// 角色瞄准
 	void Aiming(bool bAiming);
+	void Shoot();
 	// 角色开火
 	void Fire(bool bFire);
 
@@ -56,6 +57,11 @@ private:
 
 	void InterpFOV(float DeltaTime);
 
+	/// Automatic fire
+	void StartFireTimer();
+	// 用于自动开火的计时器回调函数
+	void FireTimerFinished();
+
 private:
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
 	class ABlasterPlayerController* PlayerController; // 角色的 PlayerController，用于获取 HUD
@@ -66,6 +72,7 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_IsAiming)
 	bool bIsAiming; // 是否在瞄准
+	bool bIsFire; // 是否在开火
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
@@ -85,6 +92,10 @@ private:
 	float DefaultFOV; // 没有瞄准时的 FOV
 	float CurrentFOV; // 当前的 FOV
 	float ZoomInterpSpeed = 20.f; // 瞄准时的插值速度
+
+	/// Automatic fire
+	FTimerHandle FireTimerHandle;
+	bool bCanFire = true; // 连发武器必须等待计时器结束才能再次开火
 
 	friend class ABlasterCharacter;
 };

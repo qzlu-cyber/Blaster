@@ -63,6 +63,8 @@ public:
 
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE bool GetAutomaticFire() const { return bAutomaticFire; }
+	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 
 private:
 	UFUNCTION()
@@ -104,4 +106,10 @@ private:
 	float ZoomedFOV = 45.f;
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	float ZoomInterpSpeed = 20.f;
+
+	/// Automatic fire
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	bool bAutomaticFire = true; // 是否是连发武器
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	float FireDelay = 0.15f; // 连发武器的开火间隔
 };
