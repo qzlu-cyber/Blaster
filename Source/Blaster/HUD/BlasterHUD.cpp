@@ -2,6 +2,26 @@
 
 
 #include "BlasterHUD.h"
+#include "CharacterOverlay.h"
+
+#include "GameFramework/PlayerController.h"
+
+void ABlasterHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+}
+
+void ABlasterHUD::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController(); // 获取玩家控制器
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
 
 void ABlasterHUD::DrawHUD()
 {

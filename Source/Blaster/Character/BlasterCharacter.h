@@ -182,4 +182,10 @@ private:
 	// Hide Camera when Character is close
 	UPROPERTY(EditAnywhere, Category="Camera")
 	float HideCameraDistance = 200.f;
+
+	/// Player Stats
+	UPROPERTY(EditAnywhere, Category="Player Stats")
+	float MaxHealth = 100.f; // 最大血量
+	UPROPERTY(EditAnywhere, Category="Player Stats")
+	float Health = 100.f; // 当前血量
 };
