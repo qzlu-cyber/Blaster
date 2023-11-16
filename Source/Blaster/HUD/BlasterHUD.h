@@ -44,6 +44,9 @@ private:
 
 	void AddCharacterOverlay();
 
+public:
+	class UCharacterOverlay* CharacterOverlay; // 角色信息 UI
+
 private:
 	FHUDPackage HUDPackage;
 
@@ -51,6 +54,4 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Player Stats")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass; // 角色信息 UI 类
-
-	class UCharacterOverlay* CharacterOverlay; // 角色信息 UI
 };

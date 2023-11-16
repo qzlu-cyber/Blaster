@@ -111,6 +111,9 @@ private:
 	void HideCameraIfCharacterClose();
 
 private:
+	/// PlayerController
+	class ABlasterPlayerController* BlasterPlayerController;
+	
 	/// Components
 	UPROPERTY(VisibleAnywhere, Category=Camera)
 	class USpringArmComponent* CameraBoom;

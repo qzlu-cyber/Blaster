@@ -5,6 +5,7 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -76,6 +77,9 @@ void ABlasterCharacter::PostInitializeComponents()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	if (BlasterPlayerController) BlasterPlayerController->SetBlasterHealthHUD(Health, MaxHealth); // 设置 HUD 的血条
 }
 
 // Called every frame
