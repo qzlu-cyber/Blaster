@@ -7,6 +7,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -110,6 +111,17 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	}
 
 	HideCameraIfCharacterClose();
+	// 初始化角色的状态，但 PlayerState 在第一帧中无效，通过对其进行轮询在其有效后再初始化角色的状态
+	PollInit();
+}
+
+void ABlasterCharacter::PollInit()
+{
+	if (BlasterPlayerState == nullptr)
+	{
+		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+		if (BlasterPlayerState) BlasterPlayerState->AddToScore(0.f);
+	}
 }
 
 void ABlasterCharacter::CalculateAOPitch()

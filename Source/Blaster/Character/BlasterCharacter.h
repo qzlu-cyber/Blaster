@@ -135,6 +135,9 @@ private:
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
 	void StartDissolveTimeline();
+
+	// Pull for any relevant classes and initialize our HUD
+	void PollInit();
 	
 private:
 	/// PlayerController
@@ -234,4 +237,6 @@ private:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 在运行中动态变化的材质实例
 	UPROPERTY(EditAnywhere, Category="Elim")
 	UMaterialInstance* DissolveMaterialInstance; // 在蓝图中配置的材质实例，用于初始化 DynamicDissolveMaterialInstance
+
+	class ABlasterPlayerState* BlasterPlayerState;
 };
