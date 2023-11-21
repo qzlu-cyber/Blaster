@@ -97,6 +97,9 @@ public:
 	// server 处理角色死亡时需要单独在 erver 端执行的逻辑，如角色 respawn
 	void Elim();
 
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
