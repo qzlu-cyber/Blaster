@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
@@ -126,6 +127,11 @@ private:
 	
 	// 角色死亡计时器结束回调函数
 	void ElimTimerFinished();
+
+	// Dissolve Effect
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolveTimeline();
 	
 private:
 	/// PlayerController
@@ -141,6 +147,9 @@ private:
 	// Actor Components
 	UPROPERTY(VisibleAnywhere, Category="Combat")
 	class UCombatComponent* Combat;
+	// Dissolve
+	UPROPERTY(VisibleAnywhere, Category="Elim")
+	class UTimelineComponent* DissolveTimeline;
 
 	/// Input
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
@@ -214,4 +223,12 @@ private:
 	FTimerHandle ElimTimerHandle; // 死亡后的计时器，用于 respawn
 	UPROPERTY(EditDefaultsOnly, Category="Player Stats")
 	float ElimDelay = 5.f; // 死亡后的计时器时间
+	// Dissolve Effect
+	FOnTimelineFloat DissolveTrack;
+	UPROPERTY(EditAnywhere)
+	class UCurveFloat* DissolveCurve;
+	UPROPERTY(VisibleAnywhere, Category="Elim")
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 在运行中动态变化的材质实例
+	UPROPERTY(EditAnywhere, Category="Elim")
+	UMaterialInstance* DissolveMaterialInstance; // 在蓝图中配置的材质实例，用于初始化 DynamicDissolveMaterialInstance
 };

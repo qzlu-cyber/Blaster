@@ -43,6 +43,8 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
 
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
 	GetMovementComponent()->NavAgentProps.bCanCrouch = true; // 设置角色可以蹲下
 
 	GetMesh()->SetCollisionObjectType(ECC_SkeletaMesh); // 设置 mesh 的碰撞类型为 SkeletalMesh
@@ -450,6 +452,21 @@ void ABlasterCharacter::ElimTimerFinished()
 	if (BlasterGameMode) BlasterGameMode->PlayerRespawn(this, Controller);
 }
 
+void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if (DynamicDissolveMaterialInstance) DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+}
+
+void ABlasterCharacter::StartDissolveTimeline()
+{
+	DissolveTrack.BindDynamic(this, &ABlasterCharacter::UpdateDissolveMaterial); // 绑定回调函数，当 timeline play 时调用，timeline play 需要绑定 curve
+	if (DissolveTimeline && DissolveCurve)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack); // 将 curve 添加到 timeline 中，并告知 timeline 在播放时去 DissolveTrack 中查找回调函数
+		DissolveTimeline->Play();
+	}
+}
+
 void ABlasterCharacter::Elim()
 {
 	ElimMulticast();
@@ -463,6 +480,17 @@ void ABlasterCharacter::ElimMulticast_Implementation()
 {
 	bIsElimmed = true;
 	PlayElimMontage();
+
+	if (DissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this); // 创建动态材质实例
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance); // 设置 mesh 的材质
+
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), -0.5f); // 设置材质的 Dissolve 参数
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f); // 设置材质的 Glow 参数
+	}
+	
+	StartDissolveTimeline(); // 启动 timeline
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
