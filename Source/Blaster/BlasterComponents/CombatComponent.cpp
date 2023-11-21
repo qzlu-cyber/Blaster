@@ -202,6 +202,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
+	// 角色已装备武器时再次拾取需要先丢弃已有武器
+	if (EquippedWeapon) DropWeapon();
+
 	// 装配武器
 	// 两件事会被复制，一是武器上的武器状态本身，二是附加到角色的行为
 	// 但并不能保证其中哪一个会先传到客户端，不能假定先复制武器状态，然后再复制附着动作。因为情况并非总是如此
