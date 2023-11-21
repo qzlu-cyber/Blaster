@@ -481,6 +481,7 @@ void ABlasterCharacter::ElimMulticast_Implementation()
 	bIsElimmed = true;
 	PlayElimMontage();
 
+	// 角色消融效果
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this); // 创建动态材质实例
@@ -491,6 +492,17 @@ void ABlasterCharacter::ElimMulticast_Implementation()
 	}
 	
 	StartDissolveTimeline(); // 启动 timeline
+
+	// 禁止角色移动和旋转
+	GetCharacterMovement()->DisableMovement(); // 禁止移动
+	GetCharacterMovement()->StopMovementImmediately(); // 立即停止移动，同时禁止角色跟随鼠标旋转
+	// 禁止响应输入
+	if (BlasterPlayerController) DisableInput(BlasterPlayerController);
+	// 禁用碰撞
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// 丢掉武器
+	if (Combat) Combat->DropWeapon();
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用

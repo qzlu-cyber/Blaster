@@ -187,6 +187,12 @@ void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
 	{
+		// SetWeaponState 处理了碰撞属性，当角色试图拿起被丢弃的武器时，此时武器是有物理属性的，这就无法把武器 attach 到角色的手上
+		// 所以就需要在拾起武器前将碰撞和物理属性都给禁用
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
 		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
 	}
@@ -197,6 +203,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
 	// 装配武器
+	// 两件事会被复制，一是武器上的武器状态本身，二是附加到角色的行为
+	// 但并不能保证其中哪一个会先传到客户端，不能假定先复制武器状态，然后再复制附着动作。因为情况并非总是如此
+	// 为了避免这一假设，可以在 client 端（OnRep_EquippedWeapon）也做这两件事
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
@@ -212,25 +221,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 void UCombatComponent::DropWeapon()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
-	
-	// 从右手插槽分离武器
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
-	{
-		// 设置武器的位置和旋转
-		FVector WeaponLocation = Character->GetActorLocation() + Character->GetActorForwardVector() * 100.0f; // 适当的位置
-		FRotator WeaponRotation = Character->GetActorRotation(); // 适当的旋转
 
-		WeaponLocation.Z = 2.f;
-		WeaponRotation.Pitch = -90.f;
-
-		EquippedWeapon->SetActorLocation(WeaponLocation);
-		EquippedWeapon->SetActorRotation(WeaponRotation);
-
-		EquippedWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	}
 	// 卸下武器
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
+	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	EquippedWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
 
 	EquippedWeapon->SetOwner(nullptr);
 	EquippedWeapon = nullptr;
