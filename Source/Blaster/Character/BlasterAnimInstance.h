@@ -63,4 +63,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	bool bIsLocallyControlled; // 是否是本地控制的角色
+
+	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
+	bool bIsElimmed;
 };

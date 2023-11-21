@@ -24,4 +24,6 @@ public:
 		class ABlasterPlayerController* VictimPlayerController,
 		ABlasterPlayerController* AttackerController
 	);
+
+	void PlayerRespawn(ACharacter* ElimmedPlayer, AController* ElimmedPayerController);
 };

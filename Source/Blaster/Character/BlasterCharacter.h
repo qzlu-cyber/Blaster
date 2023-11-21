@@ -74,6 +74,7 @@ public:
 
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
+	FORCEINLINE bool IsElimmed() const { return bIsElimmed; }
 
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
@@ -82,10 +83,18 @@ public:
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 
 	void PlayFireWeaponMontage(bool bAiming);
+	void PlayElimMontage();
 
 	FVector GetHitTarget() const;
 
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	/// 处理角色死亡时的逻辑
+	UFUNCTION(NetMulticast, Reliable)
+	void ElimMulticast();
+
+	// server 处理角色死亡时需要单独在 erver 端执行的逻辑，如角色 respawn
+	void Elim();
 
 private:
 	UFUNCTION()
@@ -114,9 +123,9 @@ private:
 	/// 处理受到伤害时的逻辑
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	/// 处理角色死亡时的逻辑
-	void Elim();
+	
+	// 角色死亡计时器结束回调函数
+	void ElimTimerFinished();
 	
 private:
 	/// PlayerController
@@ -167,6 +176,8 @@ private:
 	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* HitReactMontage; // 角色受到攻击时动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* ElimMontage; // 角色死亡时动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;
@@ -199,4 +210,8 @@ private:
 	float MaxHealth = 100.f; // 最大血量
 	UPROPERTY(ReplicatedUsing=OnRep_Health, EditAnywhere, Category="Player Stats")
 	float Health = 100.f; // 当前血量
+	bool bIsElimmed = false; // 是否已经死亡
+	FTimerHandle ElimTimerHandle; // 死亡后的计时器，用于 respawn
+	UPROPERTY(EditDefaultsOnly, Category="Player Stats")
+	float ElimDelay = 5.f; // 死亡后的计时器时间
 };

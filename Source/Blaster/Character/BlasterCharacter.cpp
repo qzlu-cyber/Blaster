@@ -267,10 +267,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	}
 }
 
-void ABlasterCharacter::Elim()
-{
-}
-
 // Called to bind functionality to input
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -429,6 +425,12 @@ void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 	}
 }
 
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && ElimMontage) AnimInstance->Montage_Play(ElimMontage);
+}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if (!Combat && !Combat->EquippedWeapon) return;
@@ -440,6 +442,27 @@ void ABlasterCharacter::PlayHitReactMontage()
 		const FName Section("FromFront");
 		AnimInstance->Montage_JumpToSection(Section);
 	}
+}
+
+void ABlasterCharacter::ElimTimerFinished()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if (BlasterGameMode) BlasterGameMode->PlayerRespawn(this, Controller);
+}
+
+void ABlasterCharacter::Elim()
+{
+	ElimMulticast();
+
+	// 重生
+	GetWorldTimerManager().SetTimer(ElimTimerHandle, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+}
+
+// server 端调用 ReceiveDamage()，ReceiveDamage 调用多播 RPC，在所有 client 端执行
+void ABlasterCharacter::ElimMulticast_Implementation()
+{
+	bIsElimmed = true;
+	PlayElimMontage();
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
