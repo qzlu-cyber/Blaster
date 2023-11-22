@@ -308,10 +308,24 @@ void UCombatComponent::Fire(bool bFire)
 	if (bIsFire) Shoot();
 }
 
+void UCombatComponent::Reload()
+{
+	if (!EquippedWeapon) return;
+
+	ServerReload();
+}
+
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	// 从 server 端调用 NetMulticast 类型的 RPC，将在 server 和所有 client 上执行
 	MulticastFire(TraceHitTarget);
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if (!Character) return;
+	
+	Character->PlayReloadMontage();
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)

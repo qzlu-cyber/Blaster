@@ -59,6 +59,9 @@ protected:
 	// 开火
 	void Fire(const FInputActionValue& Value);
 
+	// 换弹
+	void Reload(const FInputActionValue& Value);
+
 	// 配置 AimOffset
 	void AimOffset(float DeltaTime);
 
@@ -84,6 +87,7 @@ public:
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 
 	void PlayFireWeaponMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 
 	FVector GetHitTarget() const;
@@ -186,10 +190,14 @@ private:
 	// Fire
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* FireAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* ReloadAction;
 
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* ReloadMontage; // 角色换弹时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* HitReactMontage; // 角色受到攻击时动画
 	UPROPERTY(EditAnywhere, Category=Combat)

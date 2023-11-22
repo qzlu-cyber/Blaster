@@ -350,6 +350,11 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::Fire);
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Fire);
 		}
+		if (ReloadAction)
+		{
+			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Reload);
+			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Reload);
+		}
 	}
 
 }
@@ -430,6 +435,11 @@ void ABlasterCharacter::Fire(const FInputActionValue& Value)
 	}
 }
 
+void ABlasterCharacter::Reload(const FInputActionValue& Value)
+{
+	if (Combat) Combat->Reload();
+}
+
 void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 {
 	if (!Combat && !Combat->EquippedWeapon) return;
@@ -439,6 +449,26 @@ void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		const FName Section = bAiming ? FName("Rifle_Hip") : FName("Rifle_Aim"); // 根据是否瞄准跳转到对应的 Section
+		AnimInstance->Montage_JumpToSection(Section);
+	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if (!Combat && !Combat->EquippedWeapon) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName Section;
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+			case EWeaponTypes::EWT_AssaultRifle:
+				Section = FName(TEXT("Rifle"));
+				break;
+			default: break;
+		}
 		AnimInstance->Montage_JumpToSection(Section);
 	}
 }

@@ -44,6 +44,8 @@ public:
 	void Shoot();
 	// 角色开火
 	void Fire(bool bFire);
+	// 角色换弹
+	void Reload();
 
 private:
 	UFUNCTION()
@@ -52,9 +54,11 @@ private:
 	void OnRep_IsAiming(bool bLastIsAiming);
 	UFUNCTION()
 	void OnRep_CarriedWeaponAmmo();
-
+	
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
