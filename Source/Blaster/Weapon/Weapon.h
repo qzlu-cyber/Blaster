@@ -66,7 +66,7 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE bool GetAutomaticFire() const { return bAutomaticFire; }
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
-	FORCEINLINE int32 GetWeaponAmmo() const { return Ammo; }
+	FORCEINLINE bool IsEmptyAmmo() const { return Ammo <= 0; }
 
 	virtual void OnRep_Owner() override;
 

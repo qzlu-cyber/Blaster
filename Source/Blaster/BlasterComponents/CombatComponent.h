@@ -62,6 +62,9 @@ private:
 	// 用于自动开火的计时器回调函数
 	void FireTimerFinished();
 
+	// 是否可以开火
+	bool CanFire() const;
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色

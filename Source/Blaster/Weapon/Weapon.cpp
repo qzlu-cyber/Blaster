@@ -177,7 +177,7 @@ void AWeapon::SetAmmoHUD()
 
 void AWeapon::SpendRound()
 {
-	--Ammo;
+	Ammo = FMath::Clamp(Ammo - 1, 0, MaxAmmoCapacity);
 
 	SetAmmoHUD();
 }

@@ -255,9 +255,16 @@ void UCombatComponent::Aiming(bool bAiming)
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
 }
 
+bool UCombatComponent::CanFire() const
+{
+	if (!EquippedWeapon) return false;
+
+	return !EquippedWeapon->IsEmptyAmmo() && bCanFire;
+}
+
 void UCombatComponent::Shoot()
 {
-	if (bCanFire)
+	if (CanFire())
 	{
 		bCanFire = false;
 		/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
