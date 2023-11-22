@@ -2,8 +2,9 @@
 
 
 #include "Weapon.h"
-#include "Blaster/Character/BlasterCharacter.h"
 #include "Casing.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
@@ -65,6 +66,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 /**
@@ -117,6 +119,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 			if (World) World->SpawnActor<ACasing>(CasingClass, AmmoEjectTransform.GetLocation(), AmmoEjectTransform.GetRotation().Rotator());
 		}
 	}
+	// 减少弹药并更新 AmmoHUD
+	SpendRound();
 }
 
 // 当 WeaponState 属性改变时调用
@@ -161,3 +165,42 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 	}
 }
 
+void AWeapon::SetAmmoHUD()
+{
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (BlasterOwnerCharacter)
+	{
+		BlasterOwnerPlayerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		if (BlasterOwnerPlayerController) BlasterOwnerPlayerController->SetWeaponAmmoHUD(Ammo);
+	}
+}
+
+void AWeapon::SpendRound()
+{
+	--Ammo;
+
+	SetAmmoHUD();
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetAmmoHUD();
+}
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+
+	// 如果 owner 为 nullptr，说明武器被丢弃，此时不需要更新 AmmoHUD
+	// Bug: 已装备武器再拾取时先丢弃再装备新武器，装备之后 WeaponHUD 仍然不显示，需要开枪之后才变得正常，将此逻辑放入 CombatComponent 的 OnRep_EquippedWeapon() 函数中就可正常显示 WeaponHUD
+	// if (Owner == nullptr) if (BlasterOwnerPlayerController) BlasterOwnerPlayerController->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+	// else
+	SetAmmoHUD();
+}
+
+ABlasterPlayerController* AWeapon::GetBlasterOwnerPlayerController()
+{
+	if (BlasterOwnerCharacter) return Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+
+	return nullptr;
+}

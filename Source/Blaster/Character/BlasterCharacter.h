@@ -92,7 +92,7 @@ public:
 
 	/// 处理角色死亡时的逻辑
 	UFUNCTION(NetMulticast, Reliable)
-	void ElimMulticast();
+	void MulticastElim();
 
 	// server 处理角色死亡时需要单独在 erver 端执行的逻辑，如角色 respawn
 	void Elim();

@@ -5,6 +5,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
+#include "Components/Image.h"
 
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -61,5 +62,31 @@ void ABlasterPlayerController::SetDeathHUD(int32 DeathAmount)
 	{
 		const FString DeathText = FString::Printf(TEXT("%d"), DeathAmount);
 		BlasterHUD->CharacterOverlay->DeathAmount->SetText(FText::FromString(DeathText));
+	}
+}
+
+void ABlasterPlayerController::SetWeaponAmmoHUD(int32 WeaponAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount)
+	{
+		SetWeaponHUDVisibility(ESlateVisibility::Visible);
+		const FString WeaponAmmoText = FString::Printf(TEXT("%d"), WeaponAmmo);
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(WeaponAmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount &&
+		BlasterHUD->CharacterOverlay->MainWeaponImage)
+	{
+		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->MainWeaponImage->SetVisibility(SlateVisibility);
 	}
 }

@@ -46,7 +46,7 @@ public:
 
 private:
 	UFUNCTION()
-	void OnRep_EquippedWeapon();
+	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);
 	UFUNCTION()
 	void OnRep_IsAiming(bool bLastIsAiming);
 

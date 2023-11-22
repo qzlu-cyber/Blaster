@@ -18,6 +18,8 @@ public:
 	void SetBlasterHealthHUD(float Health, float MaxHealth);
 	void SetScoreHUD(float Score);
 	void SetDeathHUD(int32 DeathAmount);
+	void SetWeaponAmmoHUD(int32 WeaponAmmo);
+	void SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
 	virtual void OnPossess(APawn* InPawn) override;
 
 protected:

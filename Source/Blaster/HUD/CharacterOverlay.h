@@ -23,4 +23,8 @@ public:
 	UTextBlock* ScoreAmount; // 击杀数
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* DeathAmount; // 死亡数
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* WeaponAmmoAmount; // 弹药数
+	UPROPERTY(meta=(BindWidget))
+	class UImage* MainWeaponImage; // 主武器图片
 };

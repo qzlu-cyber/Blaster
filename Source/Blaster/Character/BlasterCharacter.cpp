@@ -485,15 +485,18 @@ void ABlasterCharacter::StartDissolveTimeline()
 
 void ABlasterCharacter::Elim()
 {
-	ElimMulticast();
+	MulticastElim();
 
 	// 重生
 	GetWorldTimerManager().SetTimer(ElimTimerHandle, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 // server 端调用 ReceiveDamage()，ReceiveDamage 调用多播 RPC，在所有 client 端执行
-void ABlasterCharacter::ElimMulticast_Implementation()
+void ABlasterCharacter::MulticastElim_Implementation()
 {
+	// 角色死亡，设置武器弹药归零
+	if (BlasterPlayerController) BlasterPlayerController->SetWeaponAmmoHUD(0);
+	
 	bIsElimmed = true;
 	PlayElimMontage();
 

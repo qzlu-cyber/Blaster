@@ -55,6 +55,7 @@ public:
 	void ShowWeaponPickupWidget(bool bShowWidget);
 
 	void SetWeaponState(EWeaponState NewState);
+	void SetAmmoHUD();
 	FORCEINLINE class USphereComponent* GetWeaponCollision() const { return WeaponCollision; }
 
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
@@ -65,10 +66,20 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE bool GetAutomaticFire() const { return bAutomaticFire; }
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
+	FORCEINLINE int32 GetWeaponAmmo() const { return Ammo; }
+
+	virtual void OnRep_Owner() override;
+
+	class ABlasterPlayerController* GetBlasterOwnerPlayerController();
 
 private:
 	UFUNCTION()
 	void OnRep_WeaponState();
+
+	UFUNCTION()
+	void OnRep_Ammo();
+	// server 端执行减少子弹及更新 AmmoHUD
+	void SpendRound();
 
 public:
 	/// 绘制准星的材质
@@ -101,6 +112,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; // 弹壳类
 
+	// 用于更新 AmmoHUD
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerPlayerController;
+
 	/// Aiming FOV
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	float ZoomedFOV = 45.f;
@@ -112,4 +129,10 @@ private:
 	bool bAutomaticFire = true; // 是否是连发武器
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	float FireDelay = 0.15f; // 连发武器的开火间隔
+
+	/// 弹药
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Ammo)
+	int32 Ammo; // 每梭子子弹数
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmoCapacity; // 所有子弹数
 };

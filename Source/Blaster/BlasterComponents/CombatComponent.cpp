@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
+#include "Components/SlateWrapperTypes.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -183,7 +184,7 @@ void UCombatComponent::FireTimerFinished()
 	if (bIsFire && EquippedWeapon->GetAutomaticFire()) Shoot();
 }
 
-void UCombatComponent::OnRep_EquippedWeapon()
+void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 {
 	if (EquippedWeapon && Character)
 	{
@@ -195,6 +196,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
 		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	}
+
+	if (LastEquippedWeapon)
+	{
+		if (LastEquippedWeapon->GetBlasterOwnerPlayerController()) LastEquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -213,8 +219,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
-
+	
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
+	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
+	
 	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
 	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
@@ -231,6 +239,7 @@ void UCombatComponent::DropWeapon()
 	EquippedWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
 
 	EquippedWeapon->SetOwner(nullptr);
+	if (EquippedWeapon->GetBlasterOwnerPlayerController()) EquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 	EquippedWeapon = nullptr;
 }
 
