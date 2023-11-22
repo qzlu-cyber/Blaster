@@ -24,7 +24,11 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* DeathAmount; // 死亡数
 	UPROPERTY(meta=(BindWidget))
-	UTextBlock* WeaponAmmoAmount; // 弹药数
+	UTextBlock* WeaponAmmoAmount; // 每个弹夹弹药数
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* Slash;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* CarriedAmmoAmount; // 携带弹药数
 	UPROPERTY(meta=(BindWidget))
 	class UImage* MainWeaponImage; // 主武器图片
 };

@@ -19,6 +19,7 @@ public:
 	void SetScoreHUD(float Score);
 	void SetDeathHUD(int32 DeathAmount);
 	void SetWeaponAmmoHUD(int32 WeaponAmmo);
+	void SetCarriedAmmoHUD(int32 CarriedAmmo);
 	void SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
 	virtual void OnPossess(APawn* InPawn) override;
 

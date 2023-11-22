@@ -30,6 +30,12 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedWeaponAmmo, COND_OwnerOnly);
+}
+
+void UCombatComponent::InitializeCarriedAmmoMap()
+{
+	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_AssaultRifle, StartingARAmmo); // 初始化 AR 弹药
 }
 
 // Called when the game starts
@@ -46,6 +52,8 @@ void UCombatComponent::BeginPlay()
 			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
 			CurrentFOV = DefaultFOV;
 		}
+
+		if (Character->HasAuthority()) InitializeCarriedAmmoMap();
 	}
 }
 
@@ -222,6 +230,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
 	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
+	// 设置武器总携带的弹药 HUD
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 	
 	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
 	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
@@ -246,6 +259,12 @@ void UCombatComponent::DropWeapon()
 void UCombatComponent::OnRep_IsAiming(bool bLastIsAiming)
 {
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bLastIsAiming ? BaseWalkSpeed : AimWalkSpeed;
+}
+
+void UCombatComponent::OnRep_CarriedWeaponAmmo()
+{
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 }
 
 void UCombatComponent::Aiming(bool bAiming)

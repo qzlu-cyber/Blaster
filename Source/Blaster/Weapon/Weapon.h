@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "WeaponTypes.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
@@ -67,6 +69,7 @@ public:
 	FORCEINLINE bool GetAutomaticFire() const { return bAutomaticFire; }
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE bool IsEmptyAmmo() const { return Ammo <= 0; }
+	FORCEINLINE EWeaponTypes GetWeaponType() const { return WeaponType; }
 
 	virtual void OnRep_Owner() override;
 
@@ -111,6 +114,10 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; // 弹壳类
+
+	// 武器类型
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	EWeaponTypes WeaponType;
 
 	// 用于更新 AmmoHUD
 	UPROPERTY()

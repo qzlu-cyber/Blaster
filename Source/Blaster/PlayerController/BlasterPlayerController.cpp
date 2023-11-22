@@ -78,15 +78,32 @@ void ABlasterPlayerController::SetWeaponAmmoHUD(int32 WeaponAmmo)
 	}
 }
 
+void ABlasterPlayerController::SetCarriedAmmoHUD(int32 CarriedAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount)
+	{
+		SetWeaponHUDVisibility(ESlateVisibility::Visible);
+		const FString CarriedAmmoText = FString::Printf(TEXT("%d"), CarriedAmmo);
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+}
+
 void ABlasterPlayerController::SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD &&
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->WeaponAmmoAmount &&
-		BlasterHUD->CharacterOverlay->MainWeaponImage)
+		BlasterHUD->CharacterOverlay->MainWeaponImage &&
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount &&
+		BlasterHUD->CharacterOverlay->Slash)
 	{
 		BlasterHUD->CharacterOverlay->WeaponAmmoAmount->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->Slash->SetVisibility(SlateVisibility);
 		BlasterHUD->CharacterOverlay->MainWeaponImage->SetVisibility(SlateVisibility);
 	}
 }

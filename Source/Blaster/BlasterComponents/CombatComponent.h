@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -49,6 +50,8 @@ private:
 	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);
 	UFUNCTION()
 	void OnRep_IsAiming(bool bLastIsAiming);
+	UFUNCTION()
+	void OnRep_CarriedWeaponAmmo();
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -64,6 +67,9 @@ private:
 
 	// 是否可以开火
 	bool CanFire() const;
+
+	// server 端初始化武器携带的弹药数
+	void InitializeCarriedAmmoMap();
 
 private:
 	UPROPERTY()
@@ -102,6 +108,13 @@ private:
 	/// Automatic fire
 	FTimerHandle FireTimerHandle;
 	bool bCanFire = true; // 连发武器必须等待计时器结束才能再次开火
+
+	/// Weapons Stats
+	UPROPERTY(ReplicatedUsing=OnRep_CarriedWeaponAmmo)
+	int32 CarriedWeaponAmmo; // 当前装备的武器携带的弹药数
+	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每种武器携带的弹药数，只允许在 server 端设置
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo; // Assault Rifle 起始弹药数
 
 	friend class ABlasterCharacter;
 };
