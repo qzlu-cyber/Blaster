@@ -11,10 +11,15 @@ struct FHUDPackage
 {
 	GENERATED_BODY()
 
+	UPROPERTY()
 	class UTexture2D* CrosshairsCenter;
+	UPROPERTY()
 	UTexture2D* CrosshairsLeft;
+	UPROPERTY()
 	UTexture2D* CrosshairsRight;
+	UPROPERTY()
 	UTexture2D* CrosshairsTop;
+	UPROPERTY()
 	UTexture2D* CrosshairsBottom;
 
 	float CrosshairSpread;
@@ -45,6 +50,7 @@ private:
 	void AddCharacterOverlay();
 
 public:
+	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay; // 角色信息 UI
 
 private:

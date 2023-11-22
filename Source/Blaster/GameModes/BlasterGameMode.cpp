@@ -17,8 +17,8 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
 
 	if (AttackerPlayerState && VictimPlayerState && AttackerPlayerState != VictimPlayerState) // 有攻击者和被攻击者
 	{
-		AttackerPlayerState->AddToScore(1.0f); // 攻击者加分
-		// VictimPlayerState->AddToScore(-1.0f); // 被攻击者减分
+		AttackerPlayerState->AddToScore(1.0f); // 攻击者增加击杀次数
+		VictimPlayerState->AddToDeath(1); // 被攻击者增加死亡次数
 	}
 	
 	if (EliminatedPlayer) EliminatedPlayer->Elim();

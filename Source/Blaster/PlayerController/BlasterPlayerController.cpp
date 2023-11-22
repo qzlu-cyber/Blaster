@@ -51,3 +51,15 @@ void ABlasterPlayerController::SetScoreHUD(float Score)
 		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
 }
+
+void ABlasterPlayerController::SetDeathHUD(int32 DeathAmount)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->DeathAmount)
+	{
+		const FString DeathText = FString::Printf(TEXT("%d"), DeathAmount);
+		BlasterHUD->CharacterOverlay->DeathAmount->SetText(FText::FromString(DeathText));
+	}
+}

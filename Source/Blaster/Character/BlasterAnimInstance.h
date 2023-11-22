@@ -51,6 +51,7 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))
 	FTransform LeftHandTransform; // Fabrik 手臂 IK 的目标位置
 
+	UPROPERTY()
 	class AWeapon* EquippedWeapon; // 当前装备的武器
 
 	UPROPERTY(BlueprintReadOnly, Category="Movement", meta=(AllowPrivateAccess="true"))

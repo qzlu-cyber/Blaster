@@ -17,6 +17,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 public:
 	void SetBlasterHealthHUD(float Health, float MaxHealth);
 	void SetScoreHUD(float Score);
+	void SetDeathHUD(int32 DeathAmount);
 	virtual void OnPossess(APawn* InPawn) override;
 
 protected:
@@ -24,5 +25,6 @@ protected:
 
 private:
 	// PlayerController 才可以拿到 HUD
+	UPROPERTY()
 	class ABlasterHUD* BlasterHUD; // Blaster HUD
 };

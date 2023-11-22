@@ -63,8 +63,11 @@ private:
 	void FireTimerFinished();
 
 private:
+	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
+	UPROPERTY()
 	class ABlasterPlayerController* PlayerController; // 角色的 PlayerController，用于获取 HUD
+	UPROPERTY()
 	class ABlasterHUD* HUD; // 角色的 HUD，用于设置准星的 Texture
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)

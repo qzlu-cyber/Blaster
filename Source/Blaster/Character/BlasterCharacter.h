@@ -141,6 +141,7 @@ private:
 	
 private:
 	/// PlayerController
+	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 	
 	/// Components
@@ -238,5 +239,6 @@ private:
 	UPROPERTY(EditAnywhere, Category="Elim")
 	UMaterialInstance* DissolveMaterialInstance; // 在蓝图中配置的材质实例，用于初始化 DynamicDissolveMaterialInstance
 
+	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 };

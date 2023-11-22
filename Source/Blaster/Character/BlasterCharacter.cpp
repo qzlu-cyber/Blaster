@@ -120,7 +120,11 @@ void ABlasterCharacter::PollInit()
 	if (BlasterPlayerState == nullptr)
 	{
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
-		if (BlasterPlayerState) BlasterPlayerState->AddToScore(0.f);
+		if (BlasterPlayerState)
+		{
+			BlasterPlayerState->AddToScore(0.f);
+			BlasterPlayerState->AddToDeath(0);
+		}
 	}
 }
 
