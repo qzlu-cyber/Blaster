@@ -465,7 +465,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		switch (Combat->EquippedWeapon->GetWeaponType())
 		{
 			case EWeaponTypes::EWT_AssaultRifle:
-				Section = FName(TEXT("Rifle"));
+				Section = FName("Rifle");
 				break;
 			default: break;
 		}
@@ -633,6 +633,12 @@ bool ABlasterCharacter::IsWeaponEquipped() const
 	return (Combat && Combat->EquippedWeapon);
 }
 
+AWeapon* ABlasterCharacter::GetEquippedWeapon() const
+{
+	if (!Combat || !Combat->EquippedWeapon) return nullptr;
+	return Combat->EquippedWeapon;
+}
+
 bool ABlasterCharacter::IsAiming() const
 {
 	return (Combat && Combat->bIsAiming);
@@ -642,5 +648,11 @@ FVector ABlasterCharacter::GetHitTarget() const
 {
 	if (!Combat) return FVector();
 	return Combat->HitTarget;
+}
+
+ECombatState ABlasterCharacter::GetCombateState() const
+{
+	if (!Combat) return ECombatState::ECS_MAX;
+	return Combat->CombatState;
 }
 

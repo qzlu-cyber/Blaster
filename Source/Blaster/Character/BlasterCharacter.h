@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Blaster/BlasterTypes/TurnInPlace.h"
-#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
@@ -82,7 +82,7 @@ public:
 
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
-	FORCEINLINE AWeapon* GetEquippedWeapon() const { if (!Combat || !Combat->EquippedWeapon) return nullptr; return Combat->EquippedWeapon; }
+	FORCEINLINE AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 
@@ -103,6 +103,8 @@ public:
 
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+
+	ECombatState GetCombateState() const;
 
 private:
 	UFUNCTION()
@@ -156,11 +158,11 @@ private:
 	UPROPERTY(EditAnywhere, Category="HUD", BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* OverheadWidget;
 	// Actor Components
-	UPROPERTY(VisibleAnywhere, Category="Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCombatComponent* Combat;
 	// Dissolve
 	UPROPERTY(VisibleAnywhere, Category="Elim")
-	class UTimelineComponent* DissolveTimeline;
+	UTimelineComponent* DissolveTimeline;
 
 	/// Input
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))

@@ -66,5 +66,8 @@ private:
 	bool bIsLocallyControlled; // 是否是本地控制的角色
 
 	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
-	bool bIsElimmed;
+	bool bIsElimmed; // 角色是否死亡，用于播放动画
+
+	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
+	bool bUseFabrik; // 换弹时禁用固定左手的 IK
 };
