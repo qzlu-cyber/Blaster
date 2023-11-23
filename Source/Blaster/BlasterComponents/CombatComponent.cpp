@@ -170,29 +170,6 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 }
 
-void UCombatComponent::StartFireTimer()
-{
-	if (!EquippedWeapon && !Character) return;
-
-	// 启动计时器，在 FireDelay 时间后执行 FireTimerFinished()
-	Character->GetWorldTimerManager().SetTimer(
-		FireTimerHandle,
-		this,
-		&UCombatComponent::FireTimerFinished,
-		EquippedWeapon->GetFireDelay()
-	);
-}
-
-void UCombatComponent::FireTimerFinished()
-{
-	/// 无论是否按下鼠标左键开火或是否使用连发武器，都要先将 bCanFire 设置为 true
-	/// 这样，如果使用的是半自动或非自动武器，仍会在 FireDelay 后将 bCanFire 设置为 true
-	/// 对于非自动武器，必须等待一个强制延迟后才能再次开火
-	bCanFire = true;
-	// 如果按下开火键且武器是连发武器
-	if (bIsFire && EquippedWeapon->GetAutomaticFire()) Shoot();
-}
-
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 {
 	if (EquippedWeapon && Character)
@@ -279,7 +256,30 @@ bool UCombatComponent::CanFire() const
 {
 	if (!EquippedWeapon) return false;
 
-	return !EquippedWeapon->IsEmptyAmmo() && bCanFire;
+	return !EquippedWeapon->IsEmptyAmmo() && bCanFire && (CombatState == ECombatState::ECS_Unoccupied);
+}
+
+void UCombatComponent::StartFireTimer()
+{
+	if (!EquippedWeapon && !Character) return;
+
+	// 启动计时器，在 FireDelay 时间后执行 FireTimerFinished()
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimerHandle,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		EquippedWeapon->GetFireDelay()
+	);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	/// 无论是否按下鼠标左键开火或是否使用连发武器，都要先将 bCanFire 设置为 true
+	/// 这样，如果使用的是半自动或非自动武器，仍会在 FireDelay 后将 bCanFire 设置为 true
+	/// 对于非自动武器，必须等待一个强制延迟后才能再次开火
+	bCanFire = true;
+	// 如果按下开火键且武器是连发武器
+	if (bIsFire && EquippedWeapon->GetAutomaticFire()) Shoot();
 }
 
 void UCombatComponent::Shoot()
@@ -319,6 +319,9 @@ void UCombatComponent::FinishReloading()
 	if (!Character) return;
 
 	if (Character->HasAuthority()) CombatState = ECombatState::ECS_Unoccupied;
+
+	// 换弹之后，如果角色按下开火键，继续射击
+	if (bIsFire) Shoot();
 }
 
 void UCombatComponent::Reload()
@@ -335,6 +338,9 @@ void UCombatComponent::OnRep_CombatState()
 	{
 		case ECombatState::ECS_Reloading:
 			HandleReload();
+			break;
+		case ECombatState::ECS_Unoccupied:
+			if (bIsFire) Shoot();
 			break;
 		default: break;
 	}
@@ -356,6 +362,12 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	Character->PlayFireWeaponMontage(bIsAiming);
-	EquippedWeapon->Fire(TraceHitTarget);
+	if (!EquippedWeapon) return;
+
+	// 如果处于 ECS_Unoccupied 状态，才能开火，否则必须等到 CombatState 变为 ECS_Unoccupied 且复制到 client 端后才能开火
+	if (Character && (CombatState == ECombatState::ECS_Unoccupied))
+	{
+		Character->PlayFireWeaponMontage(bIsAiming);
+		EquippedWeapon->Fire(TraceHitTarget);
+	}
 }
