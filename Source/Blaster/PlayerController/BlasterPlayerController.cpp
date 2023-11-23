@@ -17,6 +17,27 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 }
 
+void ABlasterPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	SetHUDTime();
+
+	TimeSinceLastSync += DeltaSeconds;
+	if (IsLocalController() && TimeSinceLastSync > TimeSyncFrequency)
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		TimeSinceLastSync = 0.f; // 重置同步时间
+	}
+}
+
+void ABlasterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+	
+	if (IsLocalController()) ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+}
+
 // 重写父类 OnPossess 函数，一旦拥有 BlasterCharacter(Pawn) 就更新角色的状态
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
@@ -106,4 +127,52 @@ void ABlasterPlayerController::SetWeaponHUDVisibility(const ESlateVisibility& Sl
 		BlasterHUD->CharacterOverlay->Slash->SetVisibility(SlateVisibility);
 		BlasterHUD->CharacterOverlay->MainWeaponImage->SetVisibility(SlateVisibility);
 	}
+}
+
+void ABlasterPlayerController::SetCountdownHUD(float Countdown)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->MatchCountdownText)
+	{
+		const uint32 Minutes = FMath::FloorToInt(Countdown / 60);
+		const uint32 Seconds = Countdown - (Minutes * 60);
+		
+		const FString CountdownText = FString::Printf(TEXT("%02d : %02d"), Minutes, Seconds);
+		BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDTime()
+{
+	const uint32 SecondsLeft = FMath::CeilToInt(MatchCountdown - GetServerTime());
+	// 每秒更新 HUD
+	if (CountdownInt != SecondsLeft) SetCountdownHUD(MatchCountdown - GetServerTime());
+
+	CountdownInt = SecondsLeft;
+}
+
+void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
+{
+	const float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest,
+	float TimeOfServerReceivedClientRequest)
+{
+	// 计算 RTT
+	const float RTT = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	// 根据 RTT 估算当前服务器时间
+	const float CurrentServerTime = TimeOfServerReceivedClientRequest + (0.5f * RTT);
+	// 计算客户端和服务器的时间差
+	ClientServerDeltaTime =  CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+float ABlasterPlayerController::GetServerTime() const
+{
+	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
+	else return GetWorld()->GetTimeSeconds() + ClientServerDeltaTime;
 }

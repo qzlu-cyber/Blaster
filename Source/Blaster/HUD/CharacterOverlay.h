@@ -31,4 +31,6 @@ public:
 	UTextBlock* CarriedAmmoAmount; // 携带弹药数
 	UPROPERTY(meta=(BindWidget))
 	class UImage* MainWeaponImage; // 主武器图片
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* MatchCountdownText; // 倒计时
 };
