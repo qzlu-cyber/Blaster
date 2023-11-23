@@ -31,6 +31,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedWeaponAmmo, COND_OwnerOnly);
+	DOREPLIFETIME(UCombatComponent, CombatState);
 }
 
 void UCombatComponent::InitializeCarriedAmmoMap()
@@ -306,6 +307,45 @@ void UCombatComponent::Fire(bool bFire)
 	
 	// 从 client 端调用 server 类型的 RPC，将在 server 端执行
 	if (bIsFire) Shoot();
+}
+
+void UCombatComponent::HandleReload()
+{
+	Character->PlayReloadMontage();
+}
+
+void UCombatComponent::FinishReloading()
+{
+	if (!Character) return;
+
+	if (Character->HasAuthority()) CombatState = ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::Reload()
+{
+	if (!EquippedWeapon) return;
+
+	// 还有弹药可换且不处于正换弹状态才可换弹
+	if (CarriedWeaponAmmo > 0 && CombatState != ECombatState::ECS_Reloading) ServerReload();
+}
+
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+		case ECombatState::ECS_Reloading:
+			HandleReload();
+			break;
+		default: break;
+	}
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if (!Character) return;
+	
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "Blaster/BlasterTypes/TurnInPlace.h"
-#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
@@ -59,6 +59,9 @@ protected:
 	// 开火
 	void Fire(const FInputActionValue& Value);
 
+	// 换弹
+	void Reload(const FInputActionValue& Value);
+
 	// 配置 AimOffset
 	void AimOffset(float DeltaTime);
 
@@ -79,11 +82,12 @@ public:
 
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
-	FORCEINLINE AWeapon* GetEquippedWeapon() const { if (!Combat || !Combat->EquippedWeapon) return nullptr; return Combat->EquippedWeapon; }
+	FORCEINLINE AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 
 	void PlayFireWeaponMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 
 	FVector GetHitTarget() const;
@@ -99,6 +103,8 @@ public:
 
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+
+	ECombatState GetCombateState() const;
 
 private:
 	UFUNCTION()
@@ -152,11 +158,11 @@ private:
 	UPROPERTY(EditAnywhere, Category="HUD", BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* OverheadWidget;
 	// Actor Components
-	UPROPERTY(VisibleAnywhere, Category="Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UCombatComponent* Combat;
 	// Dissolve
 	UPROPERTY(VisibleAnywhere, Category="Elim")
-	class UTimelineComponent* DissolveTimeline;
+	UTimelineComponent* DissolveTimeline;
 
 	/// Input
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
@@ -186,10 +192,14 @@ private:
 	// Fire
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* FireAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* ReloadAction;
 
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
 	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* ReloadMontage; // 角色换弹时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* HitReactMontage; // 角色受到攻击时动画
 	UPROPERTY(EditAnywhere, Category=Combat)

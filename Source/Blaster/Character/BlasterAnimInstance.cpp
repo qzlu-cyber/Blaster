@@ -3,8 +3,8 @@
 
 #include "BlasterAnimInstance.h"
 #include "Blaster/Weapon/Weapon.h"
-
 #include "BlasterCharacter.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -35,6 +35,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	TurnInPlace = BlasterCharacter->GetTurnInPlace();
 	bRotateRootBone = BlasterCharacter->GetRotateRootBone();
 	bIsElimmed = BlasterCharacter->IsElimmed();
+	bUseFabrik = BlasterCharacter->GetCombateState() != ECombatState::ECS_Reloading;
 
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation(); // 获取角色的瞄准方向。 global rotation
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity()); // 获取角色的移动方向。 local rotation

@@ -4,6 +4,7 @@
 
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/Weapon/WeaponTypes.h"
+#include "Blaster/BlasterTypes/CombatState.h"
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -44,6 +45,8 @@ public:
 	void Shoot();
 	// 角色开火
 	void Fire(bool bFire);
+	// 角色换弹
+	void Reload();
 
 private:
 	UFUNCTION()
@@ -52,9 +55,13 @@ private:
 	void OnRep_IsAiming(bool bLastIsAiming);
 	UFUNCTION()
 	void OnRep_CarriedWeaponAmmo();
-
+	UFUNCTION()
+	void OnRep_CombatState();
+	
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
@@ -71,6 +78,11 @@ private:
 	// server 端初始化武器携带的弹药数
 	void InitializeCarriedAmmoMap();
 
+	// 处理换弹逻辑
+	void HandleReload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
@@ -78,6 +90,9 @@ private:
 	class ABlasterPlayerController* PlayerController; // 角色的 PlayerController，用于获取 HUD
 	UPROPERTY()
 	class ABlasterHUD* HUD; // 角色的 HUD，用于设置准星的 Texture
+
+	UPROPERTY(ReplicatedUsing=OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied; // 角色的战斗状态
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon; // 当前装备的武器
@@ -114,7 +129,7 @@ private:
 	int32 CarriedWeaponAmmo; // 当前装备的武器携带的弹药数
 	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每种武器携带的弹药数，只允许在 server 端设置
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo; // Assault Rifle 起始弹药数
+	int32 StartingARAmmo = 150; // Assault Rifle 起始弹药数
 
 	friend class ABlasterCharacter;
 };
