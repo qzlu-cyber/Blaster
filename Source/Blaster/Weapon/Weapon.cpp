@@ -182,6 +182,13 @@ void AWeapon::SpendRound()
 	SetAmmoHUD();
 }
 
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MaxAmmoCapacity);
+	// server 端更新 AmmoHUD
+	SetAmmoHUD();
+}
+
 void AWeapon::OnRep_Ammo()
 {
 	SetAmmoHUD();

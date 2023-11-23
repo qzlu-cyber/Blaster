@@ -83,6 +83,11 @@ private:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	// 计算换弹数量
+	int32 AmountToReload();
+	// 更新各种弹药数
+	void UpdateAmmos();
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
@@ -127,7 +132,7 @@ private:
 	/// Weapons Stats
 	UPROPERTY(ReplicatedUsing=OnRep_CarriedWeaponAmmo)
 	int32 CarriedWeaponAmmo; // 当前装备的武器携带的弹药数
-	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每种武器携带的弹药数，只允许在 server 端设置
+	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每个角色每种武器携带的弹药数，只允许在 server 端设置
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 150; // Assault Rifle 起始弹药数
 

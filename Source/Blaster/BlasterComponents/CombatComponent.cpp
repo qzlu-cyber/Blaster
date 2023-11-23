@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SlateWrapperTypes.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -179,6 +180,16 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+
+		// 播放装备武器的音效
+		if (EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				EquippedWeapon->EquipSound,
+				Character->GetActorLocation()
+			);
+		}
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
 		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
@@ -205,11 +216,24 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 	if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+
+	// 播放装备武器的音效
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
+	}
 	
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
 	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
 	// 设置武器总携带的弹药 HUD
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+
+	// 检查是否需要换弹
+	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload();
 	
 	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
@@ -280,6 +304,9 @@ void UCombatComponent::FireTimerFinished()
 	bCanFire = true;
 	// 如果按下开火键且武器是连发武器
 	if (bIsFire && EquippedWeapon->GetAutomaticFire()) Shoot();
+
+	// 检查是否需要换弹
+	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload();
 }
 
 void UCombatComponent::Shoot()
@@ -318,18 +345,60 @@ void UCombatComponent::FinishReloading()
 {
 	if (!Character) return;
 
-	if (Character->HasAuthority()) CombatState = ECombatState::ECS_Unoccupied;
+	if (Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		// 确保换弹动画结束后才更新 HUD
+		UpdateAmmos();
+	}
 
 	// 换弹之后，如果角色按下开火键，继续射击
 	if (bIsFire) Shoot();
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if (!Character || !EquippedWeapon) return 0;
+	
+	// 最多可装填弹药数量
+	int32 RoomInMag = EquippedWeapon->GetMaxAmmoCapacity() - EquippedWeapon->GetAmmo();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		// 当前携带的弹药数量少于 RoomInMag 时可全部装填，否则只能装填 RoomInMag 数量的弹药。故取二者最小值
+		int32 Least = FMath::Min(RoomInMag, CarriedWeaponAmmo);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+
+	return 0;
+}
+
+void UCombatComponent::UpdateAmmos()
+{
+	if (!Character || !EquippedWeapon) return;
+	
+	int32 ReloadAmount = AmountToReload();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		EquippedWeapon->AddAmmo(-ReloadAmount);
+		// server 端更新 HUD
+		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+		if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
+	}
 }
 
 void UCombatComponent::Reload()
 {
 	if (!EquippedWeapon) return;
 
-	// 还有弹药可换且不处于正换弹状态才可换弹
-	if (CarriedWeaponAmmo > 0 && CombatState != ECombatState::ECS_Reloading) ServerReload();
+	// 还有弹药可换且弹夹不满且不处于正换弹状态才可换弹
+	if (CarriedWeaponAmmo > 0 &&
+		EquippedWeapon->GetAmmo() < EquippedWeapon->GetMaxAmmoCapacity() &&
+		CombatState != ECombatState::ECS_Reloading)
+	{
+		ServerReload();
+	}
 }
 
 void UCombatComponent::OnRep_CombatState()
@@ -348,7 +417,7 @@ void UCombatComponent::OnRep_CombatState()
 
 void UCombatComponent::ServerReload_Implementation()
 {
-	if (!Character) return;
+	if (!Character || !EquippedWeapon) return;
 	
 	CombatState = ECombatState::ECS_Reloading;
 	HandleReload();

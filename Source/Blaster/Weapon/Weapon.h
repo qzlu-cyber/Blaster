@@ -70,10 +70,15 @@ public:
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE bool IsEmptyAmmo() const { return Ammo <= 0; }
 	FORCEINLINE EWeaponTypes GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMaxAmmoCapacity() const { return MaxAmmoCapacity; }
 
 	virtual void OnRep_Owner() override;
 
 	class ABlasterPlayerController* GetBlasterOwnerPlayerController();
+
+	// 装弹
+	void AddAmmo(int32 AmmoToAdd);
 
 private:
 	UFUNCTION()
@@ -96,6 +101,10 @@ public:
 	UTexture2D* CrosshairsLeft;
 	UPROPERTY(EditAnywhere, Category="Crosshire")
 	UTexture2D* CrosshairsRight;
+
+	// 装备武器音效
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
@@ -139,7 +148,7 @@ private:
 
 	/// 弹药
 	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Ammo)
-	int32 Ammo; // 每梭子子弹数
+	int32 Ammo; // 每梭子当前剩余子弹数
 	UPROPERTY(EditAnywhere)
-	int32 MaxAmmoCapacity; // 所有子弹数
+	int32 MaxAmmoCapacity; // 每梭子子弹数
 };

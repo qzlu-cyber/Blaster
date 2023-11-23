@@ -70,4 +70,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
 	bool bUseFabrik; // 换弹时禁用固定左手的 IK
+
+	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
+	bool bUseAimOffset; // 换弹时禁用 Aim Offset
 };
