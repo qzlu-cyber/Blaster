@@ -5,16 +5,44 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
-#include "Components/Image.h"
+#include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/HUD/Announcement.h"
 
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Net/UnrealNetwork.h"
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
+	if (BlasterHUD) BlasterHUD->AddAnnouncement();
+}
+
+void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+}
+
+void ABlasterPlayerController::PollInit()
+{
+	if (CharacterOverlay == nullptr)
+	{
+		if (BlasterHUD && BlasterHUD->CharacterOverlay)
+		{
+			CharacterOverlay = BlasterHUD->CharacterOverlay;
+			if (CharacterOverlay)
+			{
+				SetBlasterHealthHUD(HealthHUD, MaxHealthHUD);
+				SetScoreHUD(ScoreHUD);
+				SetDeathHUD(DeathHUD);
+			}
+		}
+	}
 }
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
@@ -29,6 +57,8 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSinceLastSync = 0.f; // 重置同步时间
 	}
+
+	PollInit();
 }
 
 void ABlasterPlayerController::ReceivedPlayer()
@@ -60,6 +90,12 @@ void ABlasterPlayerController::SetBlasterHealthHUD(float Health, float MaxHealth
 		BlasterHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 		BlasterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HealthHUD = Health;
+		MaxHealthHUD = MaxHealth;
+	}
 }
 
 void ABlasterPlayerController::SetScoreHUD(float Score)
@@ -72,6 +108,11 @@ void ABlasterPlayerController::SetScoreHUD(float Score)
 		const FString ScoreText = FString::Printf(TEXT("%d"), FMath::CeilToInt(Score));
 		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		ScoreHUD = Score;
+	}
 }
 
 void ABlasterPlayerController::SetDeathHUD(int32 DeathAmount)
@@ -83,6 +124,11 @@ void ABlasterPlayerController::SetDeathHUD(int32 DeathAmount)
 	{
 		const FString DeathText = FString::Printf(TEXT("%d"), DeathAmount);
 		BlasterHUD->CharacterOverlay->DeathAmount->SetText(FText::FromString(DeathText));
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		DeathHUD = DeathAmount;
 	}
 }
 
@@ -151,6 +197,31 @@ void ABlasterPlayerController::SetHUDTime()
 	if (CountdownInt != SecondsLeft) SetCountdownHUD(MatchCountdown - GetServerTime());
 
 	CountdownInt = SecondsLeft;
+}
+
+void ABlasterPlayerController::OnMatchStateSet(FName State)
+{
+	MatchState = State;
+	
+	HandleMatchHasStarted();
+}
+
+void ABlasterPlayerController::OnRep_MatchState()
+{
+	HandleMatchHasStarted();
+}
+
+void ABlasterPlayerController::HandleMatchHasStarted()
+{
+	if (MatchState == MatchState::InProgress)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if (BlasterHUD)
+		{
+			BlasterHUD->AddCharacterOverlay();
+			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden); // 游戏正式开始后隐藏 AnnouncementUI
+		}
+	}
 }
 
 void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)

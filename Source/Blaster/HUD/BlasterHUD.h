@@ -44,14 +44,18 @@ protected:
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& NewHUDPackage) { HUDPackage = NewHUDPackage; }
 
+	void AddCharacterOverlay();
+	void AddAnnouncement();
+
 private:
 	void DrawCrosshair(class UTexture2D* Texture, const FVector2D& DrawPoint, const FVector2D& Spread);
-
-	void AddCharacterOverlay();
 
 public:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay; // 角色信息 UI
+
+	UPROPERTY()
+	class UAnnouncement* Announcement; // 公告 UI
 
 private:
 	FHUDPackage HUDPackage;
@@ -60,4 +64,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category="Player Stats")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass; // 角色信息 UI 类
+	UPROPERTY(EditAnywhere, Category="Announcements")
+	TSubclassOf<class UUserWidget> AnnouncementClass;
 };

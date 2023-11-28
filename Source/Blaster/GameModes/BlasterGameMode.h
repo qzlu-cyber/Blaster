@@ -15,6 +15,9 @@ class BLASTER_API ABlasterGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
+	ABlasterGameMode();
+	virtual void Tick(float DeltaSeconds) override;
+	
 	/// 角色死亡时调用
 	/// @param EliminatedPlayer 被淘汰的角色
 	/// @param VictimPlayerController 被淘汰的角色的控制器
@@ -26,4 +29,14 @@ public:
 	);
 
 	void PlayerRespawn(ACharacter* ElimmedPlayer, AController* ElimmedPayerController);
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void OnMatchStateSet() override;
+
+private:
+	UPROPERTY(EditDefaultsOnly)
+	float WarmupTime = 10.f; // 热身时间
+	float CountdownTime = 0.f; // StartMatch 倒计时
+	float StartingLevelTime = 0.f; // 进入关卡的时间
 };

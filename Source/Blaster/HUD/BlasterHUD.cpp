@@ -3,6 +3,7 @@
 
 #include "BlasterHUD.h"
 #include "CharacterOverlay.h"
+#include "Announcement.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -10,7 +11,7 @@ void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AddCharacterOverlay();
+	// AddCharacterOverlay();
 }
 
 void ABlasterHUD::AddCharacterOverlay()
@@ -20,6 +21,16 @@ void ABlasterHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
 		CharacterOverlay->AddToViewport();
+	}
+}
+
+void ABlasterHUD::AddAnnouncement()
+{
+	APlayerController* PlayerController = GetOwningPlayerController(); // 获取玩家控制器
+	if (PlayerController && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
+		Announcement->AddToViewport();
 	}
 }
 
@@ -45,19 +56,16 @@ void ABlasterHUD::DrawHUD()
 			const FVector2D Spread(-SpreadScaled, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairsLeft, ViewportCenter, Spread);
 		}
-		
 		if (HUDPackage.CrosshairsRight)
 		{
 			const FVector2D Spread(SpreadScaled, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairsRight, ViewportCenter, Spread);
 		}
-		
 		if (HUDPackage.CrosshairsTop)
 		{
 			const FVector2D Spread(0.f, SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsTop, ViewportCenter, Spread);
 		}
-		
 		if (HUDPackage.CrosshairsBottom)
 		{
 			const FVector2D Spread(0.f, -SpreadScaled);
