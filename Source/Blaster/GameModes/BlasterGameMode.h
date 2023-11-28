@@ -6,6 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "BlasterGameMode.generated.h"
 
+namespace MatchState
+{
+	extern BLASTER_API const FName Cooldown;
+}
+
 /**
  * 
  */
@@ -30,6 +35,8 @@ public:
 
 	void PlayerRespawn(ACharacter* ElimmedPlayer, AController* ElimmedPayerController);
 
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
@@ -41,6 +48,8 @@ public:
 	float WarmupTime = 10.f; // 热身时间
 	float CountdownTime = 0.f; // StartMatch 倒计时
 	float StartingLevelTime = 0.f; // 进入关卡的时间
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f; // 结算画面时间
 
 private:
 

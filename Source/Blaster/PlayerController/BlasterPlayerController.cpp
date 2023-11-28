@@ -203,6 +203,11 @@ void ABlasterPlayerController::SetAnnouncementCountdownHUD(float Countdown)
 		BlasterHUD->Announcement &&
 		BlasterHUD->Announcement->WarmupTime)
 	{
+		if (Countdown < 0.f)
+		{
+			BlasterHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
 		const uint32 Minutes = FMath::FloorToInt(Countdown / 60);
 		const uint32 Seconds = Countdown - (Minutes * 60);
 		
@@ -216,12 +221,14 @@ void ABlasterPlayerController::SetHUDTime()
 	float TimeLeft = 0.f;
 	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + StartingLevelTime;
 	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + StartingLevelTime;
+	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + StartingLevelTime;
 	
-	const uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft + StartingLevelTime);
+	
 	// 每秒更新 HUD
 	if (CountdownInt != SecondsLeft)
 	{
-		if (MatchState == MatchState::WaitingToStart) SetAnnouncementCountdownHUD(TimeLeft);
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown) SetAnnouncementCountdownHUD(TimeLeft);
 		else if (MatchState == MatchState::InProgress) SetCountdownHUD(TimeLeft);
 	}
 
@@ -232,23 +239,39 @@ void ABlasterPlayerController::OnMatchStateSet(FName State)
 {
 	MatchState = State;
 	
-	HandleMatchHasStarted();
+	if (MatchState == MatchState::InProgress) HandleMatchHasStarted();
+	else if (MatchState == MatchState::Cooldown) HandleCooldown();
 }
 
 void ABlasterPlayerController::OnRep_MatchState()
 {
-	HandleMatchHasStarted();
+	if (MatchState == MatchState::InProgress) HandleMatchHasStarted();
+	else if (MatchState == MatchState::Cooldown) HandleCooldown();
 }
 
 void ABlasterPlayerController::HandleMatchHasStarted()
 {
-	if (MatchState == MatchState::InProgress)
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD)
+	{
+		BlasterHUD->AddCharacterOverlay();
+		if (BlasterHUD->Announcement) BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden); // 游戏正式开始后隐藏 Announcement
+	}
+}
+
+void ABlasterPlayerController::HandleCooldown()
+{
+	if (MatchState == MatchState::Cooldown)
 	{
 		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 		if (BlasterHUD)
 		{
-			BlasterHUD->AddCharacterOverlay();
-			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden); // 游戏正式开始后隐藏 AnnouncementUI
+			if (BlasterHUD->CharacterOverlay) BlasterHUD->CharacterOverlay->RemoveFromParent(); // 移除 CharacterOverlayUI
+			if (BlasterHUD->Announcement && BlasterHUD->Announcement->AnnouncementText)
+			{
+				BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // 游戏结束后显示 AnnouncementUI
+				BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(FString(TEXT("新游戏"))));
+			}
 		}
 	}
 }
@@ -273,24 +296,26 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeO
 
 void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 {
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 	if (BlasterGameMode)
 	{
 		MatchTime = BlasterGameMode->MatchTime;
 		WarmupTime = BlasterGameMode->WarmupTime;
+		CooldownTime = BlasterGameMode->CooldownTime;
 		StartingLevelTime = BlasterGameMode->StartingLevelTime;
 		MatchState = BlasterGameMode->GetMatchState(); // 此时 client 端会调用 OnRep_MatchState(), 要确保 MatchTime、WarmupTime、StartingLevelTime 也要同步到 client
 		// 使用 client RPC 一同更新 MatchTime、WarmupTime、StartingLevelTime
-		ClientJoinMidGame(MatchState, MatchTime, WarmupTime, StartingLevelTime);
+		ClientJoinMidGame(MatchState, MatchTime, WarmupTime, CooldownTime, StartingLevelTime);
 
 		if (BlasterHUD && MatchState == MatchState::WaitingToStart) BlasterHUD->AddAnnouncement();
 	}
 }
 
-void ABlasterPlayerController::ClientJoinMidGame_Implementation(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfStartingLevel)
+void ABlasterPlayerController::ClientJoinMidGame_Implementation(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfCooldown, float TimeOfStartingLevel)
 {
 	MatchTime = TimeOfMatch;
 	WarmupTime = TimeOfWarmup;
+	CooldownTime = TimeOfCooldown;
 	StartingLevelTime = TimeOfStartingLevel;
 	MatchState = State;
 

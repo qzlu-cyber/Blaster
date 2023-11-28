@@ -51,21 +51,26 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidGame(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfStartingLevel);
+	void ClientJoinMidGame(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfCooldown, float TimeOfStartingLevel);
 
 	UFUNCTION()
 	void OnRep_MatchState();
 
 	void HandleMatchHasStarted();
+	void HandleCooldown();
 
 private:
 	// PlayerController 才可以拿到 HUD
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD; // Blaster HUD
 
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
+
 	float WarmupTime = 0.f;
 	float MatchTime = 0.f;
 	float StartingLevelTime = 0.f;
+	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0.f;
 	float ClientServerDeltaTime;
 	
