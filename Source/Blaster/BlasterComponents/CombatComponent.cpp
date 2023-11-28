@@ -65,7 +65,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	SetHUDCrosshairs(DeltaTime);
-	if (Character && Character->IsLocallyControlled())
+	if (Character && Character->IsLocallyControlled() && !Character->GetDisableGameplay())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshair(HitResult);
