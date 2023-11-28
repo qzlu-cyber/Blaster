@@ -3,6 +3,7 @@
 
 #include "BlasterGameMode.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 
@@ -66,9 +67,12 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
 	ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimPlayerController ? Cast<ABlasterPlayerState>(VictimPlayerController->PlayerState) : nullptr;
 
-	if (AttackerPlayerState && VictimPlayerState && AttackerPlayerState != VictimPlayerState) // 有攻击者和被攻击者
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+	
+	if (AttackerPlayerState && VictimPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState) // 有攻击者和被攻击者
 	{
 		AttackerPlayerState->AddToScore(1.0f); // 攻击者增加击杀次数
+		BlasterGameState->UpdateTopScore(AttackerPlayerState); // 检查是否需要更新最高得分玩家
 		VictimPlayerState->AddToDeath(1); // 被攻击者增加死亡次数
 	}
 	

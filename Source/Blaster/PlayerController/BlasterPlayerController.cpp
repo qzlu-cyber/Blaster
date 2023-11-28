@@ -5,8 +5,10 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
-#include "Blaster/GameModes/BlasterGameMode.h"
 #include "Blaster/HUD/Announcement.h"
+#include "Blaster/GameModes/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -267,10 +269,29 @@ void ABlasterPlayerController::HandleCooldown()
 		if (BlasterHUD)
 		{
 			if (BlasterHUD->CharacterOverlay) BlasterHUD->CharacterOverlay->RemoveFromParent(); // 移除 CharacterOverlayUI
-			if (BlasterHUD->Announcement && BlasterHUD->Announcement->AnnouncementText)
+			if (BlasterHUD->Announcement && BlasterHUD->Announcement->AnnouncementText && BlasterHUD->Announcement->InfoText)
 			{
 				BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // 游戏结束后显示 AnnouncementUI
 				BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(FString(TEXT("新游戏"))));
+
+				const ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+				const ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+				if (BlasterGameState && BlasterPlayerState)
+				{
+					TArray<ABlasterPlayerState*> TopPlayers = BlasterGameState->TopScoringPlayers;
+					FString InfoTextString;
+				
+					if (TopPlayers.Num() == 0) InfoTextString = FString(TEXT("没人获胜..."));
+					else if (TopPlayers.Num() == 1 && TopPlayers[0] == BlasterPlayerState) InfoTextString = FString(TEXT("恭喜你赢了！"));
+					else if (TopPlayers.Num() == 1) InfoTextString = FString::Printf(TEXT("赢家是：\n%s"), *TopPlayers[0]->GetPlayerName());
+					else if (TopPlayers.Num() > 1)
+					{
+						InfoTextString = FString(TEXT("赢家是：\n"));
+						for (const auto TiedPlayer : TopPlayers) InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+
+					BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
+				}
 			}
 		}
 
