@@ -273,6 +273,9 @@ void ABlasterPlayerController::HandleCooldown()
 				BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(FString(TEXT("新游戏"))));
 			}
 		}
+
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+		if (BlasterCharacter) BlasterCharacter->SetDisableGameplay(true); // 禁止响应某些输入
 	}
 }
 

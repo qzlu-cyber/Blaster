@@ -100,6 +100,23 @@ void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RotateInPlace(DeltaTime);
+
+	HideCameraIfCharacterClose();
+	// 初始化角色的状态，但 PlayerState 在第一帧中无效，通过对其进行轮询在其有效后再初始化角色的状态
+	PollInit();
+}
+
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 禁止角色转身动画
+		bRotateRootBone = false; // 禁止角色根骨骼旋转
+		bUseControllerRotationYaw = false;
+
+		return;
+	}
 	// 如果不是 SimulatedProxy 且是受控制的角色，执行 AimOffset
 	if (GetLocalRole() > ROLE_SimulatedProxy && IsLocallyControlled()) AimOffset(DeltaTime);
 	else
@@ -109,10 +126,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 		CalculateAOPitch();
 	}
-
-	HideCameraIfCharacterClose();
-	// 初始化角色的状态，但 PlayerState 在第一帧中无效，通过对其进行轮询在其有效后再初始化角色的状态
-	PollInit();
 }
 
 void ABlasterCharacter::PollInit()
@@ -361,6 +374,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 void ABlasterCharacter::MoveForward(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+	
 	FVector2D MovementVector = Value.Get<FVector2D>(); // 获取输入的移动向量
 
 	if (Controller)
@@ -376,6 +391,8 @@ void ABlasterCharacter::MoveForward(const FInputActionValue& Value)
 
 void ABlasterCharacter::MoveRight(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+
 	FVector2D MovementVector = Value.Get<FVector2D>(); // 获取输入的移动向量
 
 	if (Controller)
@@ -401,18 +418,24 @@ void ABlasterCharacter::LookUp(const FInputActionValue& Value)
 
 void ABlasterCharacter::Crouching(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+
 	if (bIsCrouched) UnCrouch();
 	else Crouch();
 }
 
 void ABlasterCharacter::Jump()
 {
+	if (bDisableGameplay) return;
+
 	if (bIsCrouched) UnCrouch();
 	else Super::Jump();
 }
 
 void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Value.GetMagnitude() > 0.f)
 	{
 		if (HasAuthority()) Combat->Aiming(true);
@@ -427,6 +450,8 @@ void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 
 void ABlasterCharacter::Fire(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Combat)
 	{
 		// 开火和战斗有关，交给 CombatComponent 处理
@@ -437,6 +462,8 @@ void ABlasterCharacter::Fire(const FInputActionValue& Value)
 
 void ABlasterCharacter::Reload(const FInputActionValue& Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Combat) Combat->Reload();
 }
 
@@ -545,8 +572,8 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	// 禁止角色移动和旋转
 	GetCharacterMovement()->DisableMovement(); // 禁止移动
 	GetCharacterMovement()->StopMovementImmediately(); // 立即停止移动，同时禁止角色跟随鼠标旋转
-	// 禁止响应输入
-	if (BlasterPlayerController) DisableInput(BlasterPlayerController);
+	// 禁止响应某些输入
+	bDisableGameplay = true;
 	// 禁用碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -650,7 +677,7 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return Combat->HitTarget;
 }
 
-ECombatState ABlasterCharacter::GetCombateState() const
+ECombatState ABlasterCharacter::GetCombatState() const
 {
 	if (!Combat) return ECombatState::ECS_MAX;
 	return Combat->CombatState;

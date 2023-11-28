@@ -104,7 +104,10 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
-	ECombatState GetCombateState() const;
+	ECombatState GetCombatState() const;
+
+	void SetDisableGameplay(bool Value) { bDisableGameplay = Value; }
+	bool GetDisableGameplay() const { return bDisableGameplay; }
 
 private:
 	UFUNCTION()
@@ -144,6 +147,8 @@ private:
 
 	// Pull for any relevant classes and initialize our HUD
 	void PollInit();
+
+	void RotateInPlace(float DeltaTime);
 	
 private:
 	/// PlayerController
@@ -251,4 +256,6 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	bool bDisableGameplay = false; // 角色死亡或游戏结束时禁用某些功能
 };

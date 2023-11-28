@@ -35,8 +35,8 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	TurnInPlace = BlasterCharacter->GetTurnInPlace();
 	bRotateRootBone = BlasterCharacter->GetRotateRootBone();
 	bIsElimmed = BlasterCharacter->IsElimmed();
-	bUseFabrik = BlasterCharacter->GetCombateState() != ECombatState::ECS_Reloading;
-	bUseAimOffset = BlasterCharacter->GetCombateState() != ECombatState::ECS_Reloading;
+	bUseFabrik = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
+	bUseAimOffset = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
 
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation(); // 获取角色的瞄准方向。 global rotation
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(BlasterCharacter->GetVelocity()); // 获取角色的移动方向。 local rotation
