@@ -130,13 +130,11 @@ void AWeapon::OnRep_WeaponState()
 	{
 		case EWeaponState::EWS_Equipped:
 			ShowWeaponPickupWidget(false);
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			WeaponMesh->SetSimulatePhysics(false);
 			WeaponMesh->SetEnableGravity(false);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 开启武器的碰撞
 			WeaponMesh->SetSimulatePhysics(true);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -152,12 +150,13 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 		case EWeaponState::EWS_Equipped: // 被拾取
 			ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
 			// 装备武器后禁用武器的碰撞，避免武器碰撞到角色后在 server 端生成重叠事件再次显示拾取提示
+			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			WeaponMesh->SetSimulatePhysics(false);
 			WeaponMesh->SetEnableGravity(false);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
+			if (HasAuthority()) WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
 			WeaponMesh->SetSimulatePhysics(true);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
