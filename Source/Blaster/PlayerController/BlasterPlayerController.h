@@ -27,6 +27,7 @@ public:
 	void SetCarriedAmmoHUD(int32 CarriedAmmo);
 	void SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
 	void SetCountdownHUD(float Countdown);
+	void SetAnnouncementCountdownHUD(float Countdown);
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual float GetServerTime() const;
@@ -47,6 +48,11 @@ private:
 	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(float TimeOfClientRequest, float TimeOfServerReceivedClientRequest);
 
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidGame(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfStartingLevel);
+
 	UFUNCTION()
 	void OnRep_MatchState();
 
@@ -57,7 +63,9 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD; // Blaster HUD
 
-	float MatchCountdown = 120.f;
+	float WarmupTime = 0.f;
+	float MatchTime = 0.f;
+	float StartingLevelTime = 0.f;
 	uint32 CountdownInt = 0.f;
 	float ClientServerDeltaTime;
 	

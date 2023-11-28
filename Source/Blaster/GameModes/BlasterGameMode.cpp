@@ -37,6 +37,7 @@ void ABlasterGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
 
+	// 遍历 server 上的所有 PlayerController 并设置它们的 MatchState
 	for (FConstControllerIterator It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);

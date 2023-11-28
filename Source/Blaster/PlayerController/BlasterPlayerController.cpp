@@ -11,6 +11,7 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 void ABlasterPlayerController::BeginPlay()
@@ -18,7 +19,8 @@ void ABlasterPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
-	if (BlasterHUD) BlasterHUD->AddAnnouncement();
+
+	ServerCheckMatchState();
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -61,6 +63,10 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 	PollInit();
 }
 
+/// ReceivedPlayer() 函数只在客户端 PlayerController 上执行，不在服务器上执行
+/// ReceivedPlayer() 函数是在客户端 PlayerController 的玩家对象（Pawn）与服务器进行绑定时执行的
+/// 当客户端 PlayerController 创建并与服务器建立连接后，服务器会将相应的玩家对象分配给该客户端的 PlayerController
+/// 此时，客户端的 PlayerController 将执行 ReceivedPlayer() 函数来接收该玩家对象
 void ABlasterPlayerController::ReceivedPlayer()
 {
 	Super::ReceivedPlayer();
@@ -190,11 +196,34 @@ void ABlasterPlayerController::SetCountdownHUD(float Countdown)
 	}
 }
 
+void ABlasterPlayerController::SetAnnouncementCountdownHUD(float Countdown)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->Announcement &&
+		BlasterHUD->Announcement->WarmupTime)
+	{
+		const uint32 Minutes = FMath::FloorToInt(Countdown / 60);
+		const uint32 Seconds = Countdown - (Minutes * 60);
+		
+		const FString CountdownText = FString::Printf(TEXT("%02d : %02d"), Minutes, Seconds);
+		BlasterHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void ABlasterPlayerController::SetHUDTime()
 {
-	const uint32 SecondsLeft = FMath::CeilToInt(MatchCountdown - GetServerTime());
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + StartingLevelTime;
+	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + StartingLevelTime;
+	
+	const uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	// 每秒更新 HUD
-	if (CountdownInt != SecondsLeft) SetCountdownHUD(MatchCountdown - GetServerTime());
+	if (CountdownInt != SecondsLeft)
+	{
+		if (MatchState == MatchState::WaitingToStart) SetAnnouncementCountdownHUD(TimeLeft);
+		else if (MatchState == MatchState::InProgress) SetCountdownHUD(TimeLeft);
+	}
 
 	CountdownInt = SecondsLeft;
 }
@@ -239,7 +268,35 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeO
 	// 根据 RTT 估算当前服务器时间
 	const float CurrentServerTime = TimeOfServerReceivedClientRequest + (0.5f * RTT);
 	// 计算客户端和服务器的时间差
-	ClientServerDeltaTime =  CurrentServerTime - GetWorld()->GetTimeSeconds();
+	ClientServerDeltaTime = CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+void ABlasterPlayerController::ServerCheckMatchState_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	if (BlasterGameMode)
+	{
+		MatchTime = BlasterGameMode->MatchTime;
+		WarmupTime = BlasterGameMode->WarmupTime;
+		StartingLevelTime = BlasterGameMode->StartingLevelTime;
+		MatchState = BlasterGameMode->GetMatchState(); // 此时 client 端会调用 OnRep_MatchState(), 要确保 MatchTime、WarmupTime、StartingLevelTime 也要同步到 client
+		// 使用 client RPC 一同更新 MatchTime、WarmupTime、StartingLevelTime
+		ClientJoinMidGame(MatchState, MatchTime, WarmupTime, StartingLevelTime);
+
+		if (BlasterHUD && MatchState == MatchState::WaitingToStart) BlasterHUD->AddAnnouncement();
+	}
+}
+
+void ABlasterPlayerController::ClientJoinMidGame_Implementation(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfStartingLevel)
+{
+	MatchTime = TimeOfMatch;
+	WarmupTime = TimeOfWarmup;
+	StartingLevelTime = TimeOfStartingLevel;
+	MatchState = State;
+
+	OnMatchStateSet(MatchState);
+
+	if (BlasterHUD && MatchState == MatchState::WaitingToStart) BlasterHUD->AddAnnouncement();
 }
 
 float ABlasterPlayerController::GetServerTime() const

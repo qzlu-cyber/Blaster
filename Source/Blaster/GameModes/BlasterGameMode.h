@@ -34,9 +34,14 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
 
-private:
+public:
+	UPROPERTY(EditDefaultsOnly)
+	float MatchTime = 300.f; // 一局游戏时间
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f; // 热身时间
 	float CountdownTime = 0.f; // StartMatch 倒计时
 	float StartingLevelTime = 0.f; // 进入关卡的时间
+
+private:
+
 };
