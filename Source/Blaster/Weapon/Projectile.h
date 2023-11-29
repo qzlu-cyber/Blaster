@@ -41,10 +41,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-private:
+protected:
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* CollisionBox;
+	
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles; // 子弹的命中特效
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSound; // 子弹的命中音效
+	
+private:
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
@@ -53,10 +60,4 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystemComponent* TracerComponent; // 子弹的粒子特效组件
-
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles; // 子弹的命中特效
-
-	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound; // 子弹的命中音效
 };
