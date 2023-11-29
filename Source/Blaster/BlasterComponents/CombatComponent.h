@@ -135,6 +135,8 @@ private:
 	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每个角色每种武器携带的弹药数，只允许在 server 端设置
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 150; // Assault Rifle 起始弹药数
+	UPROPERTY(EditAnywhere)
+	int32 StartingRLAmmo = 5; // Rocket Launcher 起始弹药数
 
 	friend class ABlasterCharacter;
 };

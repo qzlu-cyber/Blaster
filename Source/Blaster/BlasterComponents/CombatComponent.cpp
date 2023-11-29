@@ -38,6 +38,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::InitializeCarriedAmmoMap()
 {
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_AssaultRifle, StartingARAmmo); // 初始化 AR 弹药
+	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_RocketLauncher, StartingRLAmmo); // 初始化 RL 弹药
 }
 
 // Called when the game starts

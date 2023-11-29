@@ -34,12 +34,12 @@ protected:
 		const FHitResult& HitResult
 	);
 
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f; // 子弹的伤害值
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-public:
-	float Damage = 20.f; // 子弹的伤害值
 
 private:
 	UPROPERTY(VisibleAnywhere)
