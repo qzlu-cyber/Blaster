@@ -5,6 +5,7 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 
 // Sets default values
@@ -12,6 +13,12 @@ AProjectileBullet::AProjectileBullet()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileMovementComponent->InitialSpeed = 15000.f; // 设置初始速度
+	ProjectileMovementComponent->MaxSpeed = 15000.f; // 设置最大速度
+	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 设置飞行时旋转
+	ProjectileMovementComponent->SetIsReplicated(true);
 }
 
 // Called when the game starts or when spawned

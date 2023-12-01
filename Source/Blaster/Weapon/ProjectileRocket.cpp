@@ -2,6 +2,7 @@
 
 
 #include "ProjectileRocket.h"
+#include "RocketMovementComponent.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -16,6 +17,13 @@ AProjectileRocket::AProjectileRocket()
 	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Rocket Mesh"));
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	ProjectileMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("Rocket Movement Component"));
+	ProjectileMovementComponent->InitialSpeed = 2000.f;
+	ProjectileMovementComponent->MaxSpeed = 2000.f;
+	ProjectileMovementComponent->ProjectileGravityScale = 0.f;
+	ProjectileMovementComponent->bRotationFollowsVelocity = true;
+	ProjectileMovementComponent->SetIsReplicated(true);
 }
 
 void AProjectileRocket::BeginPlay()
@@ -67,6 +75,8 @@ void AProjectileRocket::DestroyTimeFinished()
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& HitResult)
 {
+	if (OtherActor == GetOwner()) return; // 不对发射者造成伤害
+	
 	APawn* FiringPawn = GetInstigator(); // 获取发射者
 	if (FiringPawn && HasAuthority()) // 确保只在 server 端造成伤害
 	{

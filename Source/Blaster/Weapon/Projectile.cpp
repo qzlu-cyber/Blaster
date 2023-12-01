@@ -28,11 +28,6 @@ AProjectile::AProjectile()
 	/// 将碰撞体设为 SkeletaMesh 而非 CapsuleComponent
 	//CollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block); // 响应 Pawn 碰撞
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletaMesh, ECR_Block); // 响应 SkeletalMesh 碰撞
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->InitialSpeed = 15000.f; // 设置初始速度
-	ProjectileMovementComponent->MaxSpeed = 15000.f; // 设置最大速度
-	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 设置飞行时旋转
 }
 
 // Called when the game starts or when spawned

@@ -51,10 +51,10 @@ protected:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound; // 子弹的命中音效
 	
-private:
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
-
+	
+private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer; // 子弹的粒子特效
 
