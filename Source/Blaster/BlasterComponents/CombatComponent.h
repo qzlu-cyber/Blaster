@@ -137,6 +137,8 @@ private:
 	int32 StartingARAmmo = 150; // Assault Rifle 起始弹药数
 	UPROPERTY(EditAnywhere)
 	int32 StartingRLAmmo = 5; // Rocket Launcher 起始弹药数
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 5; // 手枪起始弹药数
 
 	friend class ABlasterCharacter;
 };
