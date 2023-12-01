@@ -6,6 +6,7 @@
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -34,9 +35,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				ECC_Visibility
 			);
 
+			FVector BeamEnd = End;
 			// 如果击中了角色
 			if (HitResult.bBlockingHit)
 			{
+				BeamEnd = HitResult.ImpactPoint;
+				
 				ABlasterCharacter* Character = Cast<ABlasterCharacter>(HitResult.GetActor());
 				if (Character)
 				{
@@ -63,6 +67,18 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						);
 					}
 				}
+			}
+
+			// 无论是否击中都播放 BeafEffect
+			if (BeamEffect)
+			{
+				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+					World,
+					BeamEffect,
+					MuzzleFlashTransform
+				);
+
+				if (Beam) Beam->SetVectorParameter(FName(TEXT("Target")), BeamEnd);
 			}
 		}
 	}
