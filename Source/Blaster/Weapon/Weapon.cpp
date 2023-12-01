@@ -18,6 +18,7 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true; // 设置为 replicated，如果不设置，client 端就不能复制变量，WeaponState 属性在 client 端不会同步
+	SetReplicateMovement(true); // 设置为 replicated，确保 client 端能够同步武器的位置
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon Mesh"));
 	RootComponent = WeaponMesh;
