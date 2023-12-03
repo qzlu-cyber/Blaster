@@ -7,7 +7,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
-
+#include "Sound/SoundCue.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -42,7 +42,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				BeamEnd = HitResult.ImpactPoint;
 				
 				ABlasterCharacter* Character = Cast<ABlasterCharacter>(HitResult.GetActor());
-				if (Character)
+				if (Character && HitResult.GetActor() != GetOwner()) // 不对自己造成伤害
 				{
 					// 只有服务器端才能造成伤害
 					if (HasAuthority())
@@ -66,10 +66,29 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 							HitResult.ImpactNormal.Rotation()
 						);
 					}
+
+					// 播放击中音效
+					if (ImpactSound)
+					{
+						UGameplayStatics::PlaySoundAtLocation(
+							World,
+							ImpactSound,
+							HitResult.ImpactPoint
+						);
+					}
 				}
 			}
 
-			// 无论是否击中都播放 BeafEffect
+			if (MuzzleFlash)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(
+					World,
+					MuzzleFlash,
+					MuzzleFlashTransform
+				);
+			}
+
+			// 无论是否击中都播放 BeamEffect
 			if (BeamEffect)
 			{
 				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
@@ -79,6 +98,15 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				);
 
 				if (Beam) Beam->SetVectorParameter(FName(TEXT("Target")), BeamEnd);
+			}
+
+			if (FireSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(
+					this,
+					FireSound,
+					GetActorLocation()
+				);
 			}
 		}
 	}

@@ -32,7 +32,7 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 	FVector NormalImpulse, const FHitResult& HitResult)
 {
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()); // 获取子弹的拥有者，在 ProjectileWeapon 子弹的拥有者被设置为武器的拥有者
-	if (OwnerCharacter)
+	if (OwnerCharacter && GetOwner() != OtherActor) // 如果拥有者存在且命中的不是拥有者自己
 	{
 		AController* OwnerController = Cast<AController>(OwnerCharacter->Controller); // 获取拥有者的控制器
 		if (OwnerController)
