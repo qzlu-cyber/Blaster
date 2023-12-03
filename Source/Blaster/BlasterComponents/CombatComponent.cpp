@@ -14,6 +14,8 @@
 #include "Components/SlateWrapperTypes.h"
 #include "Sound/SoundCue.h"
 
+#define TRACE_LENGTH 80000.f
+
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
@@ -41,6 +43,7 @@ void UCombatComponent::InitializeCarriedAmmoMap()
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_RocketLauncher, StartingRLAmmo); // 初始化 RL 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_Pistol, StartingPistolAmmo); // 初始化 Pistol 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_SubmachineGun, StartingSMGAmmo); // 初始化 SMG 弹药
+	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_Shotgun, StartingShotgunAmmo); // 初始化 Shotgun 弹药
 }
 
 // Called when the game starts
@@ -102,7 +105,7 @@ void UCombatComponent::TraceUnderCrosshair(FHitResult& HitResult)
 				const float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
 				Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 			}
-			const FVector End = Start + CrosshairWorldDirection * 10000.f;
+			const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
 			GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility);
 
