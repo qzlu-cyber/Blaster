@@ -134,11 +134,20 @@ void AWeapon::OnRep_WeaponState()
 			WeaponMesh->SetSimulatePhysics(false);
 			WeaponMesh->SetEnableGravity(false);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
+			{
+				WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				WeaponMesh->SetEnableGravity(true);
+				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+			}
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
 			WeaponMesh->SetSimulatePhysics(true);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
+			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
+			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
 		default: break;
 	}
 }
@@ -155,12 +164,21 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 			WeaponMesh->SetSimulatePhysics(false);
 			WeaponMesh->SetEnableGravity(false);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
+			{
+				WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				WeaponMesh->SetEnableGravity(true);
+				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+			}
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
 			if (HasAuthority()) WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
 			WeaponMesh->SetSimulatePhysics(true);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
+			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
+			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
 		default: break;
 	}
 }
