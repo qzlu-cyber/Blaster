@@ -27,6 +27,9 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
 	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 设置初始化时不碰撞，等待被拾取
+	WeaponMesh->SetRenderCustomDepth(true); // 启用 CustomDepth，用于绘制 Outline
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE); // 设置 CustomDepth 的值，用于绘制 Outline
+	WeaponMesh->MarkRenderStateDirty(); // 标记 RenderState 为 dirty，确保 CustomDepth 的值能够被正确设置
 
 	WeaponCollision = CreateDefaultSubobject<USphereComponent>(TEXT("Weapon Collision"));
 	WeaponCollision->SetupAttachment(WeaponMesh);
@@ -141,6 +144,7 @@ void AWeapon::OnRep_WeaponState()
 				WeaponMesh->SetEnableGravity(true);
 				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 			}
+			WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
 			WeaponMesh->SetSimulatePhysics(true);
@@ -149,6 +153,11 @@ void AWeapon::OnRep_WeaponState()
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
 			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
 			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
+			// 绘制 Outline
+			WeaponMesh->SetRenderCustomDepth(true);
+			WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+			WeaponMesh->MarkRenderStateDirty();
+			break;
 		default: break;
 	}
 }
@@ -171,6 +180,7 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 				WeaponMesh->SetEnableGravity(true);
 				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 			}
+			WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
 			if (HasAuthority()) WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
@@ -180,6 +190,11 @@ void AWeapon::SetWeaponState(EWeaponState NewState)
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
 			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
 			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
+			/// 绘制 Outline
+			WeaponMesh->SetRenderCustomDepth(true);
+			WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+			WeaponMesh->MarkRenderStateDirty();
+			break;
 		default: break;
 	}
 }
