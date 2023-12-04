@@ -28,23 +28,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	void DestroyTimeFinished();
-
-private:
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* RocketMesh;
-
-	UPROPERTY()
-	class UNiagaraComponent* TrailComponent;
-
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem; // Rocket Launcher TrailSmoke
-
-	// TrailSmoke 延迟销毁
-	FTimerHandle DestroyTimer;
-	UPROPERTY(EditAnywhere)
-	float DestroyTime = 3.f;
-
 	// 导弹飞行时的音效
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ProjectileLoop;

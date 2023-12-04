@@ -45,6 +45,7 @@ void UCombatComponent::InitializeCarriedAmmoMap()
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_SubmachineGun, StartingSMGAmmo); // 初始化 SMG 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_Shotgun, StartingShotgunAmmo); // 初始化 Shotgun 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_SniperRifle, StartingSniperAmmo); // 初始化 Sniper 弹药
+	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_GrenadeLauncher, StartingGrenadeAmmo); // 初始化 Grenade 弹药
 }
 
 // Called when the game starts

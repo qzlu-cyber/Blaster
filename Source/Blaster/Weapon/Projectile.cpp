@@ -2,10 +2,12 @@
 
 
 #include "Projectile.h"
+
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
 
 #include "Components/BoxComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -48,7 +50,7 @@ void AProjectile::BeginPlay()
 		);
 	}
 
-	if (HasAuthority()) // 只在服务器端播放命中特效和音效
+	if (HasAuthority()) // 只在服务器端绑定命中特效和音效
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
@@ -60,8 +62,68 @@ void AProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimeFinished,
+		DestroyTime,
+		false
+	);
+}
+
+void AProjectile::DestroyTimeFinished()
+{
+	Destroy();
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem, // NiagaraSystem
+			GetRootComponent(), // AttachToComponent
+			FName(), // AttachPointName
+			GetActorLocation(), // Location
+			GetActorRotation(), // Rotation
+			EAttachLocation::KeepWorldPosition, // LocationType
+			false // bAutoDestroy
+		);
+	}
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator(); // 获取发射者
+	if (FiringPawn && HasAuthority()) // 确保只在 server 端造成伤害
+		{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			TArray<AActor*> IgnoreActors;
+			IgnoreActors.Emplace(GetOwner()); // 不对发射者造成伤害
+			// 造成伤害
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this, // WorldContextObject
+				Damage, // BaseDamage
+				5.f, // MinimumDamageRadius
+				GetActorLocation(), // Origin
+				DamageInnerRadius, // DamageInnerRadius
+				DamageOuterRadius, // DamageOuterRadius
+				1.f, // DamageFalloff, 线性
+				UDamageType::StaticClass(), // DamageTypeClass
+				IgnoreActors, // IgnoreActors
+				this, // DamageCauser
+				FiringController // InstigatedByController
+			);
+		}
+	}
+}
+
 void AProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& HitResult)
+                        FVector NormalImpulse, const FHitResult& HitResult)
 {
 	Destroy();
 }

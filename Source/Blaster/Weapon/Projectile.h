@@ -42,18 +42,42 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
+	void StartDestroyTimer();
+	void DestroyTimeFinished();
+	void SpawnTrailSystem();
+	void ExplodeDamage();
+
+protected:
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+	
 	UPROPERTY(VisibleAnywhere)
 	class UBoxComponent* CollisionBox;
+
+	UPROPERTY(VisibleAnywhere)
+	class UProjectileMovementComponent* ProjectileMovementComponent;
 	
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles; // 子弹的命中特效
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound; // 子弹的命中音效
-	
-	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
-	
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem; // Rocket Launcher TrailSmoke
+	UPROPERTY()
+	class UNiagaraComponent* TrailComponent;
+
+	// TrailSmoke 延迟销毁
+	FTimerHandle DestroyTimer;
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.f;
+
+	UPROPERTY(EditAnywhere)
+	float DamageInnerRadius = 200.f;
+	UPROPERTY(EditAnywhere)
+	float DamageOuterRadius = 500.f;
+
 private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer; // 子弹的粒子特效
