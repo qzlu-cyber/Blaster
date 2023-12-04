@@ -45,10 +45,15 @@ public:
 	void Shoot();
 	// 角色开火
 	void Fire(bool bFire);
+	// 角色投掷手榴弹
+	void ThrowGrenade();
 	// 角色换弹
 	void Reload();
 
 	void JumpToShotgunEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 
 private:
 	UFUNCTION()
@@ -62,10 +67,12 @@ private:
 	
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
-	UFUNCTION(Server, Reliable)
-	void ServerReload();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
 
 	void InterpFOV(float DeltaTime);
 

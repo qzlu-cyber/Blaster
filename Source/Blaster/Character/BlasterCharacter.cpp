@@ -253,7 +253,6 @@ void ABlasterCharacter::SimulateProxyTurningInPlace()
 	TurnInPlace = ETurnInPlace::ETIP_NotTurning;
 }
 
-
 void ABlasterCharacter::HideCameraIfCharacterClose()
 {
 	// 设置只在 owner 端执行
@@ -363,6 +362,11 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::Fire);
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Fire);
 		}
+		if (ThrowGrenadeAction)
+		{
+			EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ThrowGrenade);
+			EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Completed, this, &ABlasterCharacter::ThrowGrenade);
+		}
 		if (ReloadAction)
 		{
 			EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Reload);
@@ -464,6 +468,13 @@ void ABlasterCharacter::Fire(const FInputActionValue& Value)
 	}
 }
 
+void ABlasterCharacter::ThrowGrenade(const FInputActionValue& Value)
+{
+	if (bDisableGameplay) return;
+
+	if (Combat) if (Value.GetMagnitude() > 0.f) Combat->ThrowGrenade();
+}
+
 void ABlasterCharacter::Reload(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
@@ -526,6 +537,12 @@ void ABlasterCharacter::PlayElimMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
 	if (AnimInstance && ElimMontage) AnimInstance->Montage_Play(ElimMontage);
+}
+
+void ABlasterCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && ThrowGrenadeMontage) AnimInstance->Montage_Play(ThrowGrenadeMontage);
 }
 
 void ABlasterCharacter::PlayHitReactMontage()

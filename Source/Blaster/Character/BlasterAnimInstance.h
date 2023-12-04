@@ -69,8 +69,11 @@ private:
 	bool bIsElimmed; // 角色是否死亡，用于播放动画
 
 	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
-	bool bUseFabrik; // 换弹时禁用固定左手的 IK
+	bool bUseFabrik; // 换弹、投掷手雷时禁用固定左手的 IK
 
 	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
-	bool bUseAimOffset; // 换弹时禁用 Aim Offset
+	bool bTransformRightHand; // 换弹、投掷手雷时禁用右手变换
+
+	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
+	bool bUseAimOffset; // 换弹、投掷手雷时禁用 Aim Offset
 };

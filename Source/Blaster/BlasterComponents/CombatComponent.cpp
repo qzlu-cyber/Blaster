@@ -213,6 +213,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 
+	// Combat 不为 Unoccupied 状态无法装备武器
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
 	// 角色已装备武器时再次拾取需要先丢弃已有武器
 	if (EquippedWeapon) DropWeapon();
 
@@ -363,6 +366,17 @@ void UCombatComponent::Fire(bool bFire)
 	if (bIsFire) Shoot();
 }
 
+void UCombatComponent::ThrowGrenade()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return; // 防止不断按投掷手雷键时，动画一直从头播放
+	
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+
+	if (Character) Character->PlayThrowGrenadeMontage(); // 当前调用的 client 播放投掷手雷动画
+
+	if (Character && !Character->HasAuthority()) ServerThrowGrenade(); // 如果是 server 端调用 ThrowGrenade 则不再重复播放
+}
+
 void UCombatComponent::HandleReload()
 {
 	Character->PlayReloadMontage();
@@ -449,6 +463,11 @@ void UCombatComponent::JumpToShotgunEnd()
 	}
 }
 
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 void UCombatComponent::ShotgunShellReload()
 {
 	if (Character && Character->HasAuthority()) UpdateShotgunAmmo();
@@ -458,10 +477,10 @@ void UCombatComponent::Reload()
 {
 	if (!EquippedWeapon) return;
 
-	// 还有弹药可换且弹夹不满且不处于正换弹状态才可换弹
+	// 还有弹药可换且弹夹不满且处于空闲状态才可换弹
 	if (CarriedWeaponAmmo > 0 &&
 		EquippedWeapon->GetAmmo() < EquippedWeapon->GetMaxAmmoCapacity() &&
-		CombatState != ECombatState::ECS_Reloading)
+		CombatState == ECombatState::ECS_Unoccupied)
 	{
 		ServerReload();
 	}
@@ -477,8 +496,18 @@ void UCombatComponent::OnRep_CombatState()
 		case ECombatState::ECS_Unoccupied:
 			if (bIsFire) Shoot();
 			break;
+		case ECombatState::ECS_ThrowingGrenade:
+			if (Character) Character->PlayThrowGrenadeMontage();
+			break;
 		default: break;
 	}
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+
+	if (Character) Character->PlayThrowGrenadeMontage();
 }
 
 void UCombatComponent::ServerReload_Implementation()

@@ -59,6 +59,9 @@ protected:
 	// 开火
 	void Fire(const FInputActionValue& Value);
 
+	// 投掷手榴弹
+	void ThrowGrenade(const FInputActionValue& Value);
+
 	// 换弹
 	void Reload(const FInputActionValue& Value);
 
@@ -91,6 +94,7 @@ public:
 	void PlayFireWeaponMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
+	void PlayThrowGrenadeMontage();
 
 	FVector GetHitTarget() const;
 
@@ -205,6 +209,9 @@ private:
 	UInputAction* FireAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	UInputAction* ReloadAction;
+	// Throw
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	UInputAction* ThrowGrenadeAction;
 
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
@@ -215,6 +222,8 @@ private:
 	UAnimMontage* HitReactMontage; // 角色受到攻击时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* ElimMontage; // 角色死亡时动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* ThrowGrenadeMontage; // 角色投掷手榴弹动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;
