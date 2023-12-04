@@ -44,6 +44,7 @@ void UCombatComponent::InitializeCarriedAmmoMap()
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_Pistol, StartingPistolAmmo); // 初始化 Pistol 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_SubmachineGun, StartingSMGAmmo); // 初始化 SMG 弹药
 	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_Shotgun, StartingShotgunAmmo); // 初始化 Shotgun 弹药
+	CarriedAmmoMap.Emplace(EWeaponTypes::EWT_SniperRifle, StartingSniperAmmo); // 初始化 Sniper 弹药
 }
 
 // Called when the game starts
@@ -277,9 +278,14 @@ void UCombatComponent::OnRep_CarriedWeaponAmmo()
 
 void UCombatComponent::Aiming(bool bAiming)
 {
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	
 	bIsAiming = bAiming;
 
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
+
+	// 角色是当前客户端控制的角色且装备的是狙击枪时，显示狙击枪的准星
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle) Character->ShowSniperScopeWidget(bIsAiming);
 }
 
 bool UCombatComponent::CanFire() const

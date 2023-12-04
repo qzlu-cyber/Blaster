@@ -143,6 +143,8 @@ private:
 	int32 StartingSMGAmmo = 150; // SMG 起始弹药数
 	UPROPERTY(EditAnywhere)
 	int32 StartingShotgunAmmo = 50; // Shotgun 起始弹药数
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 10; // Sniper Rifle 起始弹药数
 
 	friend class ABlasterCharacter;
 };

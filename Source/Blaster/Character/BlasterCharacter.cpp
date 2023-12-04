@@ -355,7 +355,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 		if (AimAction)
 		{
-			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aiming);
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABlasterCharacter::Aiming);
 			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::Aiming);
 		}
 		if (FireAction)
@@ -506,6 +506,9 @@ void ABlasterCharacter::PlayReloadMontage()
 			case EWeaponTypes::EWT_Shotgun:
 				Section = FName("Rifle");
 				break;
+			case EWeaponTypes::EWT_SniperRifle:
+				Section = FName("Rifle");
+				break;
 			default: break;
 		}
 		AnimInstance->Montage_JumpToSection(Section);
@@ -580,6 +583,10 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	}
 	
 	StartDissolveTimeline(); // 启动 timeline
+	
+	// 隐藏狙击镜
+	if (IsLocallyControlled() && Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle)
+		ShowSniperScopeWidget(false);
 
 	// 禁止角色移动和旋转
 	GetCharacterMovement()->DisableMovement(); // 禁止移动

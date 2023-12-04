@@ -109,6 +109,10 @@ public:
 	void SetDisableGameplay(bool Value) { bDisableGameplay = Value; }
 	bool GetDisableGameplay() const { return bDisableGameplay; }
 
+	// 当装备的武器是狙击枪时，在瞄准时显示狙击镜
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowWidget);
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
