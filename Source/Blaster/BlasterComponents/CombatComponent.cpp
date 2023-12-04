@@ -269,6 +269,9 @@ void UCombatComponent::DropWeapon()
 void UCombatComponent::OnRep_IsAiming(bool bLastIsAiming)
 {
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bLastIsAiming ? BaseWalkSpeed : AimWalkSpeed;
+
+	// 角色是当前客户端控制的角色且装备的是狙击枪时，显示狙击枪的准星
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle) Character->ShowSniperScopeWidget(bIsAiming);
 }
 
 void UCombatComponent::OnRep_CarriedWeaponAmmo()

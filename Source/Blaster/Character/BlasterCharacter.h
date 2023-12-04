@@ -135,7 +135,7 @@ private:
 	UFUNCTION(Server, Reliable)
 	void SeverDropWeapon();
 	UFUNCTION(Server, Reliable)
-	void ServerAiming(bool bIsAiming);
+	void ServerAiming(bool bAiming);
 
 	void HideCameraIfCharacterClose();
 
@@ -222,6 +222,9 @@ private:
 	/// Weapon Overlapping
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;
+
+	// Is Aiming
+	bool bIsAiming = false;
 
 	// Aim Offset
 	float AOYaw; // 静止时的 BaseAimRotation 和 静止后当前的 BaseAimRotation 的 Delta Yaw

@@ -438,11 +438,15 @@ void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 
 	if (Value.GetMagnitude() > 0.f)
 	{
+		bIsAiming = true;
+		
 		if (HasAuthority()) Combat->Aiming(true);
 		else ServerAiming(true);
 	}
 	else
 	{
+		bIsAiming = false;
+		
 		if (HasAuthority()) Combat->Aiming(false);
 		else ServerAiming(false);
 	}
@@ -588,7 +592,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	StartDissolveTimeline(); // 启动 timeline
 	
 	// 隐藏狙击镜
-	if (IsLocallyControlled() && Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle)
+	if (IsLocallyControlled() && Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle && bIsAiming)
 		ShowSniperScopeWidget(false);
 
 	// 禁止角色移动和旋转
@@ -671,9 +675,9 @@ void ABlasterCharacter::SeverDropWeapon_Implementation()
 	if (Combat) Combat->DropWeapon();
 }
 
-void ABlasterCharacter::ServerAiming_Implementation(bool bIsAiming)
+void ABlasterCharacter::ServerAiming_Implementation(bool bAiming)
 {
-	if (Combat) Combat->Aiming(bIsAiming);
+	if (Combat) Combat->Aiming(bAiming);
 }
 
 bool ABlasterCharacter::IsWeaponEquipped() const
