@@ -275,6 +275,11 @@ void UCombatComponent::OnRep_CarriedWeaponAmmo()
 {
 	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
+
+	// 当装备的武器是霰弹枪，且正在换弹且没有多余子弹了，直接跳转
+	if (EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun &&
+	CombatState == ECombatState::ECS_Reloading &&
+	CarriedWeaponAmmo == 0) JumpToShotgunEnd();
 }
 
 void UCombatComponent::Aiming(bool bAiming)
@@ -292,6 +297,12 @@ void UCombatComponent::Aiming(bool bAiming)
 bool UCombatComponent::CanFire() const
 {
 	if (!EquippedWeapon) return false;
+
+	// 针对霰弹枪做例外，在其填入子弹后就可射击
+	if (!EquippedWeapon->IsEmptyAmmo() &&
+		bCanFire &&
+		CombatState == ECombatState::ECS_Reloading &&
+		EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun) return true;
 
 	return !EquippedWeapon->IsEmptyAmmo() && bCanFire && (CombatState == ECombatState::ECS_Unoccupied);
 }
@@ -401,6 +412,45 @@ void UCombatComponent::UpdateAmmos()
 	}
 }
 
+void UCombatComponent::UpdateShotgunAmmo()
+{
+	if (!Character || !EquippedWeapon) return;
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1; // 每次装填 1 发子弹
+		CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		EquippedWeapon->AddAmmo(-1);
+		// server 端更新 HUD
+		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+		if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
+
+		// 确保霰弹枪有子弹即可射击
+		bCanFire = true;
+
+		if (EquippedWeapon->IsFullAmmo() || CarriedWeaponAmmo == 0)
+		{
+			// 已装满或没有霰弹枪子弹后，在 ReloadMontage 中直接跳转到 ShotgunEnd 片段
+			JumpToShotgunEnd();
+		}
+	}
+}
+
+void UCombatComponent::JumpToShotgunEnd()
+{
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if (AnimInstance && Character->GetReloadMontage())
+	{
+		const FName Section = FName("ShotgunEnd");
+		AnimInstance->Montage_JumpToSection(Section);
+	}
+}
+
+void UCombatComponent::ShotgunShellReload()
+{
+	if (Character && Character->HasAuthority()) UpdateShotgunAmmo();
+}
+
 void UCombatComponent::Reload()
 {
 	if (!EquippedWeapon) return;
@@ -451,5 +501,14 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	{
 		Character->PlayFireWeaponMontage(bIsAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
+	}
+
+	// 针对霰弹枪例外
+	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun)
+	{
+		Character->PlayFireWeaponMontage(bIsAiming);
+		EquippedWeapon->Fire(TraceHitTarget);
+		// 射击后更新 CombatState 以保证其之后还可换弹
+		CombatState = ECombatState::ECS_Unoccupied;
 	}
 }

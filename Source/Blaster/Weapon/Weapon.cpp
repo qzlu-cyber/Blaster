@@ -3,6 +3,7 @@
 
 #include "Weapon.h"
 #include "Casing.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 
@@ -209,6 +210,11 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 
 void AWeapon::OnRep_Ammo()
 {
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (BlasterOwnerCharacter &&
+		BlasterOwnerCharacter->GetCombatComponent() &&
+		IsFullAmmo()) BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
+	
 	SetAmmoHUD();
 }
 

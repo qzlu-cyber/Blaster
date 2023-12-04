@@ -48,6 +48,8 @@ public:
 	// 角色换弹
 	void Reload();
 
+	void JumpToShotgunEnd();
+
 private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);
@@ -87,6 +89,11 @@ private:
 	int32 AmountToReload();
 	// 更新各种弹药数
 	void UpdateAmmos();
+	// 更新霰弹枪弹药数
+	void UpdateShotgunAmmo();
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
 
 private:
 	UPROPERTY()

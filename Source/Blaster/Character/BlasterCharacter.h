@@ -85,6 +85,8 @@ public:
 	FORCEINLINE AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE ETurnInPlace GetTurnInPlace() const { return TurnInPlace; }
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 
 	void PlayFireWeaponMontage(bool bAiming);
 	void PlayReloadMontage();
@@ -168,7 +170,7 @@ private:
 	class UWidgetComponent* OverheadWidget;
 	// Actor Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
-	class UCombatComponent* Combat;
+	UCombatComponent* Combat;
 	// Dissolve
 	UPROPERTY(VisibleAnywhere, Category="Elim")
 	UTimelineComponent* DissolveTimeline;
@@ -206,7 +208,7 @@ private:
 
 	// Montages
 	UPROPERTY(EditAnywhere, Category=Combat)
-	class UAnimMontage* FireWeaponMontage; // 角色开火时动画
+	UAnimMontage* FireWeaponMontage; // 角色开火时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* ReloadMontage; // 角色换弹时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
