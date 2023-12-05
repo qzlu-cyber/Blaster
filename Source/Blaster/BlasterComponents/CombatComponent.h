@@ -67,6 +67,8 @@ public:
 	void ShowAttachedGrenade(bool bShow);
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	FORCEINLINE void SetGrenades(int32 NewGrenades) { Grenades = NewGrenades; }
+	FORCEINLINE int32 GetMaxGrenades() const { return MaxGrenades; }
 
 	void PickupAmmo(EWeaponTypes WeaponType, int32 AmmoAmount);
 
