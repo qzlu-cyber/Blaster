@@ -55,6 +55,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
 
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void PlayEquipWeaponSound();
+	void UpdateCarriedAmmo();
+
 private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);

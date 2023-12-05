@@ -186,18 +186,10 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 		// SetWeaponState 处理了碰撞属性，当角色试图拿起被丢弃的武器时，此时武器是有物理属性的，这就无法把武器 attach 到角色的手上
 		// 所以就需要在拾起武器前将碰撞和物理属性都给禁用
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-		if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+		AttachActorToRightHand(EquippedWeapon);
 
 		// 播放装备武器的音效
-		if (EquippedWeapon->EquipSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				EquippedWeapon->EquipSound,
-				Character->GetActorLocation()
-			);
-		}
+		PlayEquipWeaponSound();
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
 		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
@@ -207,6 +199,50 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 	{
 		if (LastEquippedWeapon->GetBlasterOwnerPlayerController()) LastEquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 	}
+}
+
+void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+	
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
+	if (HandSocket) HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+}
+
+void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || EquippedWeapon == nullptr || ActorToAttach == nullptr) return;
+
+	bool bUsePistolSocket =
+		EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Pistol ||
+		EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SubmachineGun;
+
+	const FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
+	
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);
+	if (HandSocket) HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
+}
+
+void UCombatComponent::PlayEquipWeaponSound()
+{
+	if (EquippedWeapon && EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			EquippedWeapon->EquipSound,
+			Character->GetActorLocation()
+		);
+	}
+}
+
+void UCombatComponent::UpdateCarriedAmmo()
+{
+	if (EquippedWeapon == nullptr) return;
+	
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -225,29 +261,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	// 为了避免这一假设，可以在 client 端（OnRep_EquippedWeapon）也做这两件事
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket) HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+	AttachActorToRightHand(EquippedWeapon);
 
 	// 播放装备武器的音效
-	if (EquippedWeapon->EquipSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			EquippedWeapon->EquipSound,
-			Character->GetActorLocation()
-		);
-	}
+	PlayEquipWeaponSound();
 	
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
 	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
-	// 设置武器总携带的弹药 HUD
-	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-
+	UpdateCarriedAmmo(); // 更新武器总携带的弹药并设置 HUD
+	
 	// 检查是否需要换弹
 	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload();
-	
-	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
-	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 	
 	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
 	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
@@ -372,7 +396,12 @@ void UCombatComponent::ThrowGrenade()
 	
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 
-	if (Character) Character->PlayThrowGrenadeMontage(); // 当前调用的 client 播放投掷手雷动画
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage(); // 当前调用的 client 播放投掷手雷动画
+
+		AttachActorToLeftHand(EquippedWeapon); // 投掷手雷时先将装备的武器固定到左手上
+	}
 
 	if (Character && !Character->HasAuthority()) ServerThrowGrenade(); // 如果是 server 端调用 ThrowGrenade 则不再重复播放
 }
@@ -466,6 +495,8 @@ void UCombatComponent::JumpToShotgunEnd()
 void UCombatComponent::ThrowGrenadeFinished()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	AttachActorToRightHand(EquippedWeapon); // 投掷结束，将武器固定到右手
 }
 
 void UCombatComponent::ShotgunShellReload()
@@ -497,7 +528,12 @@ void UCombatComponent::OnRep_CombatState()
 			if (bIsFire) Shoot();
 			break;
 		case ECombatState::ECS_ThrowingGrenade:
-			if (Character) Character->PlayThrowGrenadeMontage();
+			if (Character)
+			{
+				Character->PlayThrowGrenadeMontage();
+
+				AttachActorToLeftHand(EquippedWeapon);
+			}
 			break;
 		default: break;
 	}
@@ -507,7 +543,12 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 {
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 
-	if (Character) Character->PlayThrowGrenadeMontage();
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+
+		AttachActorToLeftHand(EquippedWeapon);
+	}
 }
 
 void UCombatComponent::ServerReload_Implementation()
