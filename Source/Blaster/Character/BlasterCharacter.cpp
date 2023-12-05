@@ -56,6 +56,10 @@ ABlasterCharacter::ABlasterCharacter()
 
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f); // 设置角色旋转速度
 
+	GrenadeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Grenade Mesh"));
+	GrenadeMeshComponent->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	GrenadeMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 初始化转身动画状态
 
 	NetUpdateFrequency = 66.f; // 设置网络同步频率，将此 actor 进行每秒复制的频率
@@ -88,6 +92,8 @@ void ABlasterCharacter::UpdateHealthHUD()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (GrenadeMeshComponent) GrenadeMeshComponent->SetVisibility(false); // 游戏开始隐藏 GrenadeMesh，只在投掷时显示
 
 	UpdateHealthHUD(); // 初始化血条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 

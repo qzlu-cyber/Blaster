@@ -55,10 +55,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
 
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
+
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
 	void PlayEquipWeaponSound();
 	void UpdateCarriedAmmo();
+
+	void ShowAttachedGrenade(bool bShow);
 
 private:
 	UFUNCTION()
@@ -78,6 +83,8 @@ private:
 	void ServerReload();
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 
 	void InterpFOV(float DeltaTime);
 
@@ -166,6 +173,8 @@ private:
 	int32 StartingSniperAmmo = 10; // Sniper Rifle 起始弹药数
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeAmmo = 5; // Grenade Launcher 起始弹药数
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
 
 	friend class ABlasterCharacter;
 };

@@ -5,6 +5,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/Projectile.h"
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
@@ -72,13 +73,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime);
 	if (Character && Character->IsLocallyControlled() && !Character->GetDisableGameplay())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshair(HitResult);
 		HitTarget = HitResult.ImpactPoint;
 
+		SetHUDCrosshairs(DeltaTime);
+		
 		InterpFOV(DeltaTime);
 	}
 }
@@ -245,6 +247,11 @@ void UCombatComponent::UpdateCarriedAmmo()
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 }
 
+void UCombatComponent::ShowAttachedGrenade(bool bShow)
+{
+	if (Character && Character->GetGrenadeMeshComponent()) Character->GetGrenadeMeshComponent()->SetVisibility(bShow);
+}
+
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
@@ -401,6 +408,8 @@ void UCombatComponent::ThrowGrenade()
 		Character->PlayThrowGrenadeMontage(); // 当前调用的 client 播放投掷手雷动画
 
 		AttachActorToLeftHand(EquippedWeapon); // 投掷手雷时先将装备的武器固定到左手上
+
+		ShowAttachedGrenade(true); // 显示手雷
 	}
 
 	if (Character && !Character->HasAuthority()) ServerThrowGrenade(); // 如果是 server 端调用 ThrowGrenade 则不再重复播放
@@ -499,6 +508,15 @@ void UCombatComponent::ThrowGrenadeFinished()
 	AttachActorToRightHand(EquippedWeapon); // 投掷结束，将武器固定到右手
 }
 
+void UCombatComponent::LaunchGrenade()
+{
+	// 此时手雷掷出，隐藏手心里的手雷
+	ShowAttachedGrenade(false);
+
+	// client 端将本地计算的 HitTarget 发送给 server 端
+	if (Character && Character->IsLocallyControlled()) ServerLaunchGrenade(HitTarget);
+}
+
 void UCombatComponent::ShotgunShellReload()
 {
 	if (Character && Character->HasAuthority()) UpdateShotgunAmmo();
@@ -533,9 +551,34 @@ void UCombatComponent::OnRep_CombatState()
 				Character->PlayThrowGrenadeMontage();
 
 				AttachActorToLeftHand(EquippedWeapon);
+
+				ShowAttachedGrenade(true);
 			}
 			break;
 		default: break;
+	}
+}
+
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if (Character && Character->GetGrenadeMeshComponent() && GrenadeClass)
+	{
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			const FVector StartingLocation = Character->GetGrenadeMeshComponent()->GetComponentLocation();
+			FVector ToHitTarget = Target - StartingLocation;
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.Owner = GetOwner();
+			SpawnParameters.Instigator = Character;
+			
+			World->SpawnActor<AProjectile>(
+				GrenadeClass,
+				StartingLocation,
+				ToHitTarget.Rotation(),
+				SpawnParameters
+			);
+		}
 	}
 }
 
@@ -548,6 +591,8 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 		Character->PlayThrowGrenadeMontage();
 
 		AttachActorToLeftHand(EquippedWeapon);
+		
+		ShowAttachedGrenade(true);
 	}
 }
 

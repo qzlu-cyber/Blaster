@@ -90,6 +90,7 @@ public:
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
+	FORCEINLINE class UStaticMeshComponent* GetGrenadeMeshComponent() const { return GrenadeMeshComponent; }
 
 	void PlayFireWeaponMontage(bool bAiming);
 	void PlayReloadMontage();
@@ -164,6 +165,10 @@ private:
 	/// PlayerController
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	/// Grenade
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* GrenadeMeshComponent;
 	
 	/// Components
 	UPROPERTY(VisibleAnywhere, Category=Camera)
