@@ -2,6 +2,8 @@
 
 
 #include "BlasterPlayerController.h"
+
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
@@ -44,6 +46,12 @@ void ABlasterPlayerController::PollInit()
 				SetBlasterHealthHUD(HealthHUD, MaxHealthHUD);
 				SetScoreHUD(ScoreHUD);
 				SetDeathHUD(DeathHUD);
+
+				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+				if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+				{
+					SetGrenadeHUD(BlasterCharacter->GetCombatComponent()->GetGrenades());
+				}
 			}
 		}
 	}
@@ -163,6 +171,23 @@ void ABlasterPlayerController::SetCarriedAmmoHUD(int32 CarriedAmmo)
 		SetWeaponHUDVisibility(ESlateVisibility::Visible);
 		const FString CarriedAmmoText = FString::Printf(TEXT("%d"), CarriedAmmo);
 		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(CarriedAmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetGrenadeHUD(int32 GrenadeAmount)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->GrenadeAmount)
+	{
+		SetWeaponHUDVisibility(ESlateVisibility::Visible);
+		const FString GrenadeText = FString::Printf(TEXT("%d"), GrenadeAmount);
+		BlasterHUD->CharacterOverlay->GrenadeAmount->SetText(FText::FromString(GrenadeText));
+	}
+	else
+	{
+		GrenadeHUD = GrenadeAmount;
 	}
 }
 

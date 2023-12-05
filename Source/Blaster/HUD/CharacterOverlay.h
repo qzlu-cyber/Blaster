@@ -32,5 +32,9 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	class UImage* MainWeaponImage; // 主武器图片
 	UPROPERTY(meta=(BindWidget))
+	UImage* GrenadeImage; // 手榴弹图片
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* GrenadeAmount; // 手榴弹数量
+	UPROPERTY(meta=(BindWidget))
 	UTextBlock* MatchCountdownText; // 倒计时
 };

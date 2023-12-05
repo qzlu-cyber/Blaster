@@ -62,8 +62,11 @@ public:
 	void AttachActorToLeftHand(AActor* ActorToAttach);
 	void PlayEquipWeaponSound();
 	void UpdateCarriedAmmo();
+	void UpdateGrenades();
 
 	void ShowAttachedGrenade(bool bShow);
+
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 
 private:
 	UFUNCTION()
@@ -74,6 +77,8 @@ private:
 	void OnRep_CarriedWeaponAmmo();
 	UFUNCTION()
 	void OnRep_CombatState();
+	UFUNCTION()
+	void OnRep_Grenades();
 	
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -173,6 +178,10 @@ private:
 	int32 StartingSniperAmmo = 10; // Sniper Rifle 起始弹药数
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeAmmo = 5; // Grenade Launcher 起始弹药数
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Grenades)
+	int32 Grenades = 2; // 当前拥有的手雷数
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades = 2; // 最多可携带的手雷数
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;
 

@@ -25,6 +25,7 @@ public:
 	void SetDeathHUD(int32 DeathAmount);
 	void SetWeaponAmmoHUD(int32 WeaponAmmo);
 	void SetCarriedAmmoHUD(int32 CarriedAmmo);
+	void SetGrenadeHUD(int32 GrenadeAmount);
 	void SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
 	void SetCountdownHUD(float Countdown);
 	void SetAnnouncementCountdownHUD(float Countdown);
@@ -88,4 +89,5 @@ private:
 	float MaxHealthHUD;
 	float ScoreHUD;
 	int32 DeathHUD;
+	int32 GrenadeHUD;
 };

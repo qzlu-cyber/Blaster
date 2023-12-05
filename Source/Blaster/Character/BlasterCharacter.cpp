@@ -284,6 +284,8 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser)
 {
+	if (bIsElimmed) return; // 如果角色已经被淘汰，不再受到伤害
+	
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth); // 更新血量
 	UpdateHealthHUD(); // 更新血条
 	PlayHitReactMontage(); // 播放受到攻击时的动画

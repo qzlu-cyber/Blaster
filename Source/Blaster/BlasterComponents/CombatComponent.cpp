@@ -36,6 +36,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedWeaponAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME(UCombatComponent, Grenades);
 }
 
 void UCombatComponent::InitializeCarriedAmmoMap()
@@ -247,6 +248,12 @@ void UCombatComponent::UpdateCarriedAmmo()
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 }
 
+void UCombatComponent::UpdateGrenades()
+{
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController) PlayerController->SetGrenadeHUD(Grenades);
+}
+
 void UCombatComponent::ShowAttachedGrenade(bool bShow)
 {
 	if (Character && Character->GetGrenadeMeshComponent()) Character->GetGrenadeMeshComponent()->SetVisibility(bShow);
@@ -401,6 +408,8 @@ void UCombatComponent::ThrowGrenade()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return; // 防止不断按投掷手雷键时，动画一直从头播放
 	
+	if (Grenades == 0) return; // 手雷数量为 0 时不可投掷
+	
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 
 	if (Character)
@@ -413,6 +422,13 @@ void UCombatComponent::ThrowGrenade()
 	}
 
 	if (Character && !Character->HasAuthority()) ServerThrowGrenade(); // 如果是 server 端调用 ThrowGrenade 则不再重复播放
+
+	if (Character && Character->HasAuthority())
+	{
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		
+		UpdateGrenades();
+	}
 }
 
 void UCombatComponent::HandleReload()
@@ -559,6 +575,11 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateGrenades();
+}
+
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
 {
 	if (Character && Character->GetGrenadeMeshComponent() && GrenadeClass)
@@ -584,6 +605,8 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
 {
+	if (Grenades == 0) return;
+	
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 
 	if (Character)
@@ -593,6 +616,10 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 		AttachActorToLeftHand(EquippedWeapon);
 		
 		ShowAttachedGrenade(true);
+
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		
+		UpdateGrenades();
 	}
 }
 
