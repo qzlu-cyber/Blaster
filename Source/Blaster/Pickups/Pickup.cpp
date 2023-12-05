@@ -24,7 +24,7 @@ APickup::APickup()
 	OverlapSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); // 只检测 Pawn
 
 	PickupMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Pickup Mesh"));
-	PickupMesh->SetupAttachment(RootComponent);
+	PickupMesh->SetupAttachment(OverlapSphere);
 	PickupMesh->SetRenderCustomDepth(true);
 	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
 	PickupMesh->MarkRenderStateDirty();

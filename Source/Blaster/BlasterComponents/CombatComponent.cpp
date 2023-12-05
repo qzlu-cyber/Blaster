@@ -188,6 +188,19 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 }
 
+void UCombatComponent::PickupAmmo(EWeaponTypes WeaponType, int32 AmmoAmount)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] += AmmoAmount;
+
+		UpdateCarriedAmmo();
+
+		// 如果当前装备的武器无弹药，且拾取的是当前装备的武器的弹药，则直接换弹
+		if (EquippedWeapon && EquippedWeapon->GetWeaponType() == WeaponType && EquippedWeapon->IsEmptyAmmo()) Reload();
+	}
+}
+
 void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 {
 	if (EquippedWeapon && Character)

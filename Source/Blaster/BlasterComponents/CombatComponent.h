@@ -68,6 +68,8 @@ public:
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 
+	void PickupAmmo(EWeaponTypes WeaponType, int32 AmmoAmount);
+
 private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);
