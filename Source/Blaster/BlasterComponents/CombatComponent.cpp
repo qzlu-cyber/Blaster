@@ -74,6 +74,12 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (!EquippedWeapon && Character)
+	{
+		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+		if (PlayerController) PlayerController->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+	}
+
 	if (Character && Character->IsLocallyControlled() && !Character->GetDisableGameplay())
 	{
 		FHitResult HitResult;
