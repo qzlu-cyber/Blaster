@@ -90,6 +90,7 @@ public:
 	FORCEINLINE bool GetRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
+	FORCEINLINE class UBuffComponent* GetBuffComponent() const { return Buff; }
 	FORCEINLINE class UStaticMeshComponent* GetGrenadeMeshComponent() const { return GrenadeMeshComponent; }
 
 	void PlayFireWeaponMontage(bool bAiming);
@@ -109,6 +110,7 @@ public:
 	void Elim();
 
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	ECombatState GetCombatState() const;
@@ -129,7 +131,7 @@ private:
 
 	// 当 Health 发生变化被 replicate 时，会调用该函数
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	/// Remote Procedure Calls: 在一台机器上调用某些操作，但在另一台机器上执行
 	/// 已经通过 Overlapping 实现了将变量从 server 端 replicate 到 client 端，即从 server 端向 client 端同步数据
@@ -180,6 +182,8 @@ private:
 	// Actor Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	UCombatComponent* Combat;
+	UPROPERTY(VisibleAnywhere)
+	UBuffComponent* Buff;
 	// Dissolve
 	UPROPERTY(VisibleAnywhere, Category="Elim")
 	UTimelineComponent* DissolveTimeline;

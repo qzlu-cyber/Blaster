@@ -8,6 +8,7 @@
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameModes/BlasterGameMode.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/BlasterComponents/BuffComponent.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -43,6 +44,9 @@ ABlasterCharacter::ABlasterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true); // 设置为 replicated, 使得该组件在 server 端和 client 端同步
+
+	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	Buff->SetIsReplicated(true);
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 
@@ -80,6 +84,8 @@ void ABlasterCharacter::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	if (Combat) Combat->Character = this;
+
+	if (Buff) Buff->Character = this;
 }
 
 void ABlasterCharacter::UpdateHealthHUD()
@@ -681,10 +687,11 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f; // 重置时间
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHealthHUD(); // 更新血条
-	PlayHitReactMontage(); // 播放受到攻击时的动画
+	
+	if (LastHealth > Health) PlayHitReactMontage(); // 播放受到攻击时的动画
 }
 
 // 当 Client 调用 RPC 时， Server 端实际执行的操作
