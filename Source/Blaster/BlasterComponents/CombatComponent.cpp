@@ -33,8 +33,10 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bIsAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedWeaponAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UCombatComponent, SecondaryCarriedWeaponAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
 }
@@ -74,10 +76,10 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!EquippedWeapon && Character)
+	if (!SecondaryWeapon && Character)
 	{
 		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
-		if (PlayerController) PlayerController->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+		if (PlayerController) PlayerController->SetSecondaryWeaponHUDVisibility(ESlateVisibility::Hidden);
 	}
 
 	if (Character && Character->IsLocallyControlled() && !Character->GetDisableGameplay())
@@ -223,9 +225,17 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	if (HandSocket) HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
 }
 
-void UCombatComponent::PlayEquipWeaponSound()
+void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 {
-	if (EquippedWeapon && EquippedWeapon->EquipSound)
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+
+	const USkeletalMeshSocket* SecondaryWeaponSocket = Character->GetMesh()->GetSocketByName(FName("SecondaryWeaponSocket"));
+	if (SecondaryWeaponSocket) SecondaryWeaponSocket->AttachActor(ActorToAttach, Character->GetMesh());
+}
+
+void UCombatComponent::PlayEquipWeaponSound(AWeapon* WeaponToEquip)
+{
+	if (Character && WeaponToEquip && WeaponToEquip->EquipSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
@@ -243,6 +253,20 @@ void UCombatComponent::UpdateCarriedAmmo()
 	
 	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
+}
+
+void UCombatComponent::UpdateSecondaryAmmo()
+{
+	if (SecondaryWeapon == nullptr) return;
+
+	if (CarriedAmmoMap.Contains(SecondaryWeapon->GetWeaponType())) SecondaryCarriedWeaponAmmo = CarriedAmmoMap[SecondaryWeapon->GetWeaponType()];
+	
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController)
+	{
+		PlayerController->SetSecondaryWeaponAmmoHUD(SecondaryWeapon->GetAmmo());
+		PlayerController->SetSecondaryCarriedAmmoHUD(SecondaryCarriedWeaponAmmo);
+	}
 }
 
 void UCombatComponent::UpdateGrenades()
@@ -263,6 +287,19 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	// Combat 不为 Unoccupied 状态无法装备武器
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
+	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr) EquipSecondaryWeapon(WeaponToEquip);
+	else EquipPrimaryWeapon(WeaponToEquip);
+	
+	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
+	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
+	Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr) return;
+	
 	// 角色已装备武器时再次拾取需要先丢弃已有武器
 	if (EquippedWeapon) DropWeapon();
 
@@ -275,7 +312,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	AttachActorToRightHand(EquippedWeapon);
 
 	// 播放装备武器的音效
-	PlayEquipWeaponSound();
+	PlayEquipWeaponSound(EquippedWeapon);
 	
 	EquippedWeapon->SetOwner(Character); // 设置武器的 owner
 	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
@@ -283,11 +320,21 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	
 	// 检查是否需要换弹
 	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload();
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr) return;
+
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	
-	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
-	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
-	Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	AttachActorToBack(WeaponToEquip);
+	
+	PlayEquipWeaponSound(SecondaryWeapon);
+	SecondaryWeapon->SetOwner(Character);
+
+	UpdateSecondaryAmmo();
 }
 
 void UCombatComponent::DropWeapon()
@@ -314,7 +361,7 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 		AttachActorToRightHand(EquippedWeapon);
 
 		// 播放装备武器的音效
-		PlayEquipWeaponSound();
+		PlayEquipWeaponSound(EquippedWeapon);
 		
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
 		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
@@ -323,6 +370,19 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 	if (LastEquippedWeapon)
 	{
 		if (LastEquippedWeapon->GetBlasterOwnerPlayerController()) LastEquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if (SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToBack(SecondaryWeapon);
+	
+		PlayEquipWeaponSound(SecondaryWeapon);
+
+		UpdateSecondaryAmmo();
 	}
 }
 
@@ -344,6 +404,12 @@ void UCombatComponent::OnRep_CarriedWeaponAmmo()
 		EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun &&
 		CombatState == ECombatState::ECS_Reloading &&
 		CarriedWeaponAmmo == 0) JumpToShotgunEnd();
+}
+
+void UCombatComponent::OnRep_SecondaryCarriedWeaponAmmo()
+{
+	PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
+	if (PlayerController) PlayerController->SetSecondaryCarriedAmmoHUD(SecondaryCarriedWeaponAmmo);
 }
 
 void UCombatComponent::Aiming(bool bAiming)

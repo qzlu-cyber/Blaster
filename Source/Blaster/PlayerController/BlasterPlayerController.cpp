@@ -49,6 +49,8 @@ void ABlasterPlayerController::PollInit()
 				if (bInitializeDeath) SetDeathHUD(DeathHUD);
 				if (bInitializeCarriedAmmo) SetCarriedAmmoHUD(CarriedAmmoHUD);
 				if (bInitializeWeaponAmmo) SetWeaponAmmoHUD(WeaponAmmoHUD);
+				if (bInitializeSecondaryCarriedAmmo) SetSecondaryCarriedAmmoHUD(SecondaryCarriedAmmoHUD);
+				if (bInitializeSecondaryWeaponAmmo) SetSecondaryWeaponAmmoHUD(SecondaryWeaponAmmoHUD);
 
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 				if (BlasterCharacter && BlasterCharacter->GetCombatComponent() && bInitializeGrenade)
@@ -240,6 +242,59 @@ void ABlasterPlayerController::SetWeaponHUDVisibility(const ESlateVisibility& Sl
 		BlasterHUD->CharacterOverlay->CarriedAmmoAmount->SetVisibility(SlateVisibility);
 		BlasterHUD->CharacterOverlay->Slash->SetVisibility(SlateVisibility);
 		BlasterHUD->CharacterOverlay->MainWeaponImage->SetVisibility(SlateVisibility);
+	}
+}
+
+void ABlasterPlayerController::SetSecondaryWeaponAmmoHUD(int32 WeaponAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->SecondaryWeaponAmmoAmount)
+	{
+		SetSecondaryWeaponHUDVisibility(ESlateVisibility::Visible);
+		const FString SecondaryWeaponAmmoText = FString::Printf(TEXT("%d"), WeaponAmmo);
+		BlasterHUD->CharacterOverlay->SecondaryWeaponAmmoAmount->SetText(FText::FromString(SecondaryWeaponAmmoText));
+	}
+	else
+	{
+		bInitializeSecondaryWeaponAmmo = true;
+		SecondaryWeaponAmmoHUD = WeaponAmmo;
+	}
+}
+
+void ABlasterPlayerController::SetSecondaryCarriedAmmoHUD(int32 CarriedAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->SecondaryCarriedAmmoAmount)
+	{
+		SetSecondaryWeaponHUDVisibility(ESlateVisibility::Visible);
+		const FString SecondaryCarriedAmmoText = FString::Printf(TEXT("%d"), CarriedAmmo);
+		BlasterHUD->CharacterOverlay->SecondaryCarriedAmmoAmount->SetText(FText::FromString(SecondaryCarriedAmmoText));
+	}
+	else
+	{
+		bInitializeSecondaryCarriedAmmo = true;
+		SecondaryCarriedAmmoHUD = CarriedAmmo;
+	}
+}
+
+void ABlasterPlayerController::SetSecondaryWeaponHUDVisibility(const ESlateVisibility& SlateVisibility)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->SecondaryWeaponAmmoAmount &&
+		BlasterHUD->CharacterOverlay->SecondaryWeaponImage &&
+		BlasterHUD->CharacterOverlay->SecondaryCarriedAmmoAmount &&
+		BlasterHUD->CharacterOverlay->SecondarySlash)
+	{
+		BlasterHUD->CharacterOverlay->SecondaryWeaponAmmoAmount->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->SecondaryCarriedAmmoAmount->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->SecondarySlash->SetVisibility(SlateVisibility);
+		BlasterHUD->CharacterOverlay->SecondaryWeaponImage->SetVisibility(SlateVisibility);
 	}
 }
 

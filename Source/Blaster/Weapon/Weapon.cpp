@@ -241,7 +241,8 @@ void AWeapon::OnRep_Owner()
 	// Bug: 已装备武器再拾取时先丢弃再装备新武器，装备之后 WeaponHUD 仍然不显示，需要开枪之后才变得正常，将此逻辑放入 CombatComponent 的 OnRep_EquippedWeapon() 函数中就可正常显示 WeaponHUD
 	// if (Owner == nullptr) if (BlasterOwnerPlayerController) BlasterOwnerPlayerController->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 	// else
-	SetAmmoHUD();
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(Owner);
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetEquippedWeapon() && BlasterOwnerCharacter->GetEquippedWeapon() == this) SetAmmoHUD();
 }
 
 ABlasterPlayerController* AWeapon::GetBlasterOwnerPlayerController()

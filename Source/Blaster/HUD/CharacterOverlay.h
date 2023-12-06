@@ -36,6 +36,14 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	class UImage* MainWeaponImage; // 主武器图片
 	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SecondaryWeaponAmmoAmount; // 副武器每个弹夹弹药数
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SecondarySlash;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* SecondaryCarriedAmmoAmount; // 副武器携带弹药数
+	UPROPERTY(meta=(BindWidget))
+	UImage* SecondaryWeaponImage; // 副武器图片
+	UPROPERTY(meta=(BindWidget))
 	UImage* GrenadeImage; // 手榴弹图片
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* GrenadeAmount; // 手榴弹数量

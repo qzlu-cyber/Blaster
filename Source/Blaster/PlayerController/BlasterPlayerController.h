@@ -26,8 +26,11 @@ public:
 	void SetDeathHUD(int32 DeathAmount);
 	void SetWeaponAmmoHUD(int32 WeaponAmmo);
 	void SetCarriedAmmoHUD(int32 CarriedAmmo);
-	void SetGrenadeHUD(int32 GrenadeAmount);
 	void SetWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
+	void SetSecondaryWeaponAmmoHUD(int32 WeaponAmmo);
+	void SetSecondaryCarriedAmmoHUD(int32 CarriedAmmo);
+	void SetSecondaryWeaponHUDVisibility(const ESlateVisibility& SlateVisibility);
+	void SetGrenadeHUD(int32 GrenadeAmount);
 	void SetCountdownHUD(float Countdown);
 	void SetAnnouncementCountdownHUD(float Countdown);
 	virtual void OnPossess(APawn* InPawn) override;
@@ -102,4 +105,8 @@ private:
 	bool bInitializeWeaponAmmo = false;
 	int32 CarriedAmmoHUD;
 	bool bInitializeCarriedAmmo = false;
+	int32 SecondaryWeaponAmmoHUD;
+	bool bInitializeSecondaryWeaponAmmo = false;
+	int32 SecondaryCarriedAmmoHUD;
+	bool bInitializeSecondaryCarriedAmmo = false;
 };

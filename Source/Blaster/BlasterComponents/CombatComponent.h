@@ -60,8 +60,10 @@ public:
 
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
-	void PlayEquipWeaponSound();
+	void AttachActorToBack(AActor* ActorToAttach);
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void UpdateCarriedAmmo();
+	void UpdateSecondaryAmmo();
 	void UpdateGrenades();
 
 	void ShowAttachedGrenade(bool bShow);
@@ -76,9 +78,13 @@ private:
 	UFUNCTION()
 	void OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon);
 	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+	UFUNCTION()
 	void OnRep_IsAiming(bool bLastIsAiming);
 	UFUNCTION()
 	void OnRep_CarriedWeaponAmmo();
+	UFUNCTION()
+	void OnRep_SecondaryCarriedWeaponAmmo();
 	UFUNCTION()
 	void OnRep_CombatState();
 	UFUNCTION()
@@ -123,6 +129,9 @@ private:
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
 
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
@@ -136,6 +145,8 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon; // 当前装备的武器
+	UPROPERTY(ReplicatedUsing=OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon; // 副武器
 
 	UPROPERTY(ReplicatedUsing=OnRep_IsAiming)
 	bool bIsAiming; // 是否在瞄准
@@ -167,6 +178,8 @@ private:
 	/// Weapons Stats
 	UPROPERTY(ReplicatedUsing=OnRep_CarriedWeaponAmmo)
 	int32 CarriedWeaponAmmo; // 当前装备的武器携带的弹药数
+	UPROPERTY(ReplicatedUsing=OnRep_SecondaryCarriedWeaponAmmo)
+	int32 SecondaryCarriedWeaponAmmo; // 当前装备的副武器携带的弹药数
 	TMap<EWeaponTypes, int32> CarriedAmmoMap; // 每个角色每种武器携带的弹药数，只允许在 server 端设置
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 150; // Assault Rifle 起始弹药数

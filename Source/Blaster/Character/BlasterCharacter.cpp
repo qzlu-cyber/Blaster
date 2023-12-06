@@ -655,8 +655,9 @@ void ABlasterCharacter::Elim()
 	// 丢掉或销毁武器
 	if (Combat)
 	{
-		if (!Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon();
-		else Combat->EquippedWeapon->Destroy();
+		if (Combat->EquippedWeapon && !Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon();
+		if (Combat->EquippedWeapon && Combat->EquippedWeapon->bDestroyWeapon) Combat->EquippedWeapon->Destroy();
+		if (Combat->SecondaryWeapon) Combat->SecondaryWeapon->Destroy();
 	}
 	
 	MulticastElim();
@@ -703,20 +704,12 @@ void ABlasterCharacter::MulticastElim_Implementation()
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
 void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
-	if (Combat)
-	{
-		if (HasAuthority()) Combat->EquipWeapon(OverlappingWeapon); // 如果是 server 端，直接拾取
-		else ServerEquipWeapon(); // 如果是 client 端，调用 RPC
-	}
+	if (Combat) ServerEquipWeapon(); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
 }
 
 void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
 {
-	if (Combat)
-	{
-		if (HasAuthority()) Combat->DropWeapon();
-		else SeverDropWeapon();
-	}
+	if (Combat && Combat->EquippedWeapon) SeverDropWeapon();
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
