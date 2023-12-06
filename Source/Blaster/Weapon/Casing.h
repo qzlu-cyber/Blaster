@@ -34,6 +34,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	void DestroyTimerFinished();
+
+private:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* CasingMesh;
 
@@ -42,4 +45,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ShellSound; // 弹壳掉落的音效
+
+	FTimerHandle DestroyTimer;
+	UPROPERTY(EditAnywhere)
+	float DestroyDelay = 0.75f; // 弹壳掉落后延迟销毁的时间
 };

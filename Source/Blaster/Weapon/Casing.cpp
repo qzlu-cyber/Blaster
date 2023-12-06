@@ -6,10 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 
-// Sets default values
 ACasing::ACasing()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	CasingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CasingMesh"));
@@ -23,27 +21,28 @@ ACasing::ACasing()
 	ShellEjectImpulse = 10.f;
 }
 
-// Called when the game starts or when spawned
 void ACasing::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CasingMesh->OnComponentHit.AddDynamic(this, &ACasing::OnHit);
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&ACasing::DestroyTimerFinished,
+		DestroyDelay
+	);
 
 	CasingMesh->AddImpulse(GetActorForwardVector() * ShellEjectImpulse);
 }
 
-// Called every frame
 void ACasing::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void ACasing::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& HitResult)
+void ACasing::DestroyTimerFinished()
 {
 	if (ShellSound) UGameplayStatics::PlaySoundAtLocation(this, ShellSound, GetActorLocation());
-
+	
 	Destroy();
 }
-
