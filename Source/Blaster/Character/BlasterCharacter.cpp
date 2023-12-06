@@ -85,7 +85,11 @@ void ABlasterCharacter::PostInitializeComponents()
 
 	if (Combat) Combat->Character = this;
 
-	if (Buff) Buff->Character = this;
+	if (Buff)
+	{
+		Buff->Character = this;
+		Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+	}
 }
 
 void ABlasterCharacter::UpdateHealthHUD()

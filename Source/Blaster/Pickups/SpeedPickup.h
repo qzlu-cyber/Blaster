@@ -4,15 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Pickup.h"
-#include "HealthPickup.generated.h"
+#include "SpeedPickup.generated.h"
 
 UCLASS()
-class BLASTER_API AHealthPickup : public APickup
+class BLASTER_API ASpeedPickup : public APickup
 {
 	GENERATED_BODY()
-
-public:
-	AHealthPickup();
 
 protected:
 	virtual void OnSphereOverlap(
@@ -26,7 +23,9 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	float HealAmount = 100.f; // 恢复的血量
+	float BaseWalkSpeed = 1600.f; // buff 后行走速度
 	UPROPERTY(EditAnywhere)
-	float HealTime = 2.f; // 恢复血量的时间
+	float BaseCrouchSpeed = 850.f; // buff 后下蹲行走速度
+	UPROPERTY(EditAnywhere)
+	float SpeedBuffTime = 10.f; // buff 持续时间
 };

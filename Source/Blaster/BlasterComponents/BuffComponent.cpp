@@ -4,6 +4,7 @@
 #include "BuffComponent.h"
 
 #include "Blaster/Character/BlasterCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 UBuffComponent::UBuffComponent()
@@ -47,3 +48,49 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 	}
 }
 
+void UBuffComponent::SetInitialSpeeds(float WalkSpeed, float CrouchSpeed)
+{
+	InitialWalkSpeed = WalkSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
+}
+
+void UBuffComponent::SpeedBuff(float WalkBuffSpeed, float CrouchBuffSpeed, float SpeedBuffTime)
+{
+	if (Character == nullptr) return;
+
+	Character->GetWorldTimerManager().SetTimer(
+		SpeedTimer,
+		this,
+		&UBuffComponent::SpeedTimerFinished,
+		SpeedBuffTime
+	);
+
+	if (Character->GetCharacterMovement()) // 只在 server 端生效
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = WalkBuffSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchBuffSpeed;
+	}
+
+	// server 端调用 多播 RPC 在所有 client 上执行速度 buff
+	MulticastSpeed(WalkBuffSpeed, CrouchBuffSpeed);
+}
+
+void UBuffComponent::SpeedTimerFinished()
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr) return;
+	
+	Character->GetCharacterMovement()->MaxWalkSpeed = InitialWalkSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+
+	// 计时器结束后 server 端调用 多播 RPC 在所有client 上恢复初始速度
+	MulticastSpeed(InitialWalkSpeed, InitialCrouchSpeed);
+}
+
+void UBuffComponent::MulticastSpeed_Implementation(float WalkSpeed, float CrouchSpeed)
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	}
+}

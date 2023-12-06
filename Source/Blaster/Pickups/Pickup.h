@@ -41,4 +41,10 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	class USoundCue* PickupSound;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraComponent* PickupEffectComponent; // pickup 特效
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickEffect; // 拾取后 pickup 销毁的特效
 };
