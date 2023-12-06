@@ -43,12 +43,13 @@ void ABlasterPlayerController::PollInit()
 			CharacterOverlay = BlasterHUD->CharacterOverlay;
 			if (CharacterOverlay)
 			{
-				SetBlasterHealthHUD(HealthHUD, MaxHealthHUD);
-				SetScoreHUD(ScoreHUD);
-				SetDeathHUD(DeathHUD);
+				if (bInitializeHealth) SetBlasterHealthHUD(HealthHUD, MaxHealthHUD);
+				if (bInitializeShield) SetBlasterShieldHUD(ShieldHUD, MaxShieldHUD);
+				if (bInitializeScore) SetScoreHUD(ScoreHUD);
+				if (bInitializeDeath) SetDeathHUD(DeathHUD);
 
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
-				if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+				if (BlasterCharacter && BlasterCharacter->GetCombatComponent() && bInitializeGrenade)
 				{
 					SetGrenadeHUD(BlasterCharacter->GetCombatComponent()->GetGrenades());
 				}
@@ -108,9 +109,30 @@ void ABlasterPlayerController::SetBlasterHealthHUD(float Health, float MaxHealth
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeHealth = true;
 		HealthHUD = Health;
 		MaxHealthHUD = MaxHealth;
+	}
+}
+
+void ABlasterPlayerController::SetBlasterShieldHUD(float Shield, float MaxShield)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->ShieldBar &&
+		BlasterHUD->CharacterOverlay->ShieldText)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		const FString ShieldText = FString::Printf(TEXT("%d / %d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
+		BlasterHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
+		BlasterHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+	}
+	else
+	{
+		bInitializeShield = true;
+		ShieldHUD = Shield;
+		MaxShieldHUD = MaxShield;
 	}
 }
 
@@ -126,7 +148,7 @@ void ABlasterPlayerController::SetScoreHUD(float Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeScore = true;
 		ScoreHUD = Score;
 	}
 }
@@ -143,7 +165,7 @@ void ABlasterPlayerController::SetDeathHUD(int32 DeathAmount)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeDeath = true;
 		DeathHUD = DeathAmount;
 	}
 }
@@ -187,6 +209,7 @@ void ABlasterPlayerController::SetGrenadeHUD(int32 GrenadeAmount)
 	}
 	else
 	{
+		bInitializeGrenade = true;
 		GrenadeHUD = GrenadeAmount;
 	}
 }

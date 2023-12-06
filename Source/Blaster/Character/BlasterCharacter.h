@@ -31,7 +31,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void PostInitializeComponents() override;
+	
 	void UpdateHealthHUD();
+	void UpdateShieldHUD();
 
 protected:
 	// Called when the game starts or when spawned
@@ -129,7 +131,9 @@ private:
 	// 当 RootComponent's position and velocity 发生变化被 replicate 时，会调用该函数
 	virtual void OnRep_ReplicatedMovement() override;
 
-	// 当 Health 发生变化被 replicate 时，会调用该函数
+	// 当 Shield 或 Health 发生变化被 replicate 时，会调用该函数
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 
@@ -264,6 +268,10 @@ private:
 	float HideCameraDistance = 200.f;
 
 	/// Player Stats
+	UPROPERTY(EditAnywhere, Category="Player Stats")
+	float MaxShield = 100.f; // 最大护盾值
+	UPROPERTY(ReplicatedUsing=OnRep_Shield, EditAnywhere, Category="Player Stats")
+	float Shield = 100.f; // 当前护盾值
 	UPROPERTY(EditAnywhere, Category="Player Stats")
 	float MaxHealth = 100.f; // 最大血量
 	UPROPERTY(ReplicatedUsing=OnRep_Health, EditAnywhere, Category="Player Stats")

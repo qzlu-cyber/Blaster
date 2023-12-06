@@ -20,6 +20,10 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* HealthText; // 血量
 	UPROPERTY(meta=(BindWidget))
+	UProgressBar* ShieldBar; // 护盾条
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* ShieldText; // 护盾值
+	UPROPERTY(meta=(BindWidget))
 	UTextBlock* ScoreAmount; // 击杀数
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* DeathAmount; // 死亡数

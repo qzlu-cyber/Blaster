@@ -77,6 +77,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly); // 只在 owner 端同步
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -98,6 +99,12 @@ void ABlasterCharacter::UpdateHealthHUD()
 	if (BlasterPlayerController) BlasterPlayerController->SetBlasterHealthHUD(Health, MaxHealth); // 设置 HUD 的血条
 }
 
+void ABlasterCharacter::UpdateShieldHUD()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController) BlasterPlayerController->SetBlasterShieldHUD(Shield, MaxShield); // 设置 HUD 的护盾条
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -105,6 +112,7 @@ void ABlasterCharacter::BeginPlay()
 	
 	if (GrenadeMeshComponent) GrenadeMeshComponent->SetVisibility(false); // 游戏开始隐藏 GrenadeMesh，只在投掷时显示
 
+	UpdateShieldHUD(); // 初始化护盾条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 	UpdateHealthHUD(); // 初始化血条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 
 	// 由 server 端统一处理受到伤害的逻辑
@@ -295,8 +303,25 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	AController* InstigatedBy, AActor* DamageCauser)
 {
 	if (bIsElimmed) return; // 如果角色已经被淘汰，不再受到伤害
+
+	float DamageToHealth = Damage; // 真伤
+	if (Shield > 0.f)
+	{
+		if (Shield >= Damage) // 护盾值大于伤害值，此时护盾吸收所有伤害
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield); // 更新护盾
+			DamageToHealth = 0.f;
+		}
+		else // 护盾值不够承受所有伤害，吸收一部分，剩余的对生命值造成伤害
+		{
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, MaxHealth); // 更新真伤
+			Shield = 0.f;
+		}
+	}
 	
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth); // 更新血量
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth); // 更新血量
+
+	UpdateShieldHUD(); // 更新护盾条
 	UpdateHealthHUD(); // 更新血条
 	PlayHitReactMontage(); // 播放受到攻击时的动画
 
@@ -689,6 +714,13 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	SimulateProxyTurningInPlace();
 
 	TimeSinceLastMovementReplication = 0.f; // 重置时间
+}
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateShieldHUD(); // 更新护盾条
+
+	if (LastShield > Shield) PlayHitReactMontage();
 }
 
 void ABlasterCharacter::OnRep_Health(float LastHealth)

@@ -21,6 +21,7 @@ public:
 
 public:
 	void SetBlasterHealthHUD(float Health, float MaxHealth);
+	void SetBlasterShieldHUD(float Shield, float MaxShield);
 	void SetScoreHUD(float Score);
 	void SetDeathHUD(int32 DeathAmount);
 	void SetWeaponAmmoHUD(int32 WeaponAmmo);
@@ -84,10 +85,17 @@ private:
 
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
-	bool bInitializeCharacterOverlay = false;
+
 	float HealthHUD;
 	float MaxHealthHUD;
+	bool bInitializeHealth = false;
+	float ShieldHUD;
+	float MaxShieldHUD;
+	bool bInitializeShield = false;
 	float ScoreHUD;
+	bool bInitializeScore = false;
 	int32 DeathHUD;
+	bool bInitializeDeath = false;
 	int32 GrenadeHUD;
+	bool bInitializeGrenade = false;
 };
