@@ -33,6 +33,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	void BindOverlapTimerFinished();
+
+private:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* OverlapSphere;
 	
@@ -47,4 +50,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* PickEffect; // 拾取后 pickup 销毁的特效
+
+	FTimerHandle BindOverlapTimer;
+	UPROPERTY(EditAnywhere)
+	float BindOverlapTime = 0.5f; // 生成后多久开始检测碰撞
 };
