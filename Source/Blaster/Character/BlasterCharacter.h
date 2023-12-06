@@ -148,6 +148,8 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipWeapon();
 	UFUNCTION(Server, Reliable)
+	void ServerSwapWeapons();
+	UFUNCTION(Server, Reliable)
 	void SeverDropWeapon();
 	UFUNCTION(Server, Reliable)
 	void ServerAiming(bool bAiming);

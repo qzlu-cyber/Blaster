@@ -38,6 +38,8 @@ protected:
 public:	
 	// 角色拾取武器
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	// 角色切换武器
+	void SwapWeapons();
 	// 角色卸下武器
 	void DropWeapon();
 	// 角色瞄准

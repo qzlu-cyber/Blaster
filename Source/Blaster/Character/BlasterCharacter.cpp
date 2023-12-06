@@ -704,7 +704,11 @@ void ABlasterCharacter::MulticastElim_Implementation()
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
 void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
-	if (Combat) ServerEquipWeapon(); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
+	if (Combat)
+	{
+		if (OverlappingWeapon) ServerEquipWeapon(); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
+		else if (Combat->EquippedWeapon && Combat->SecondaryWeapon) ServerSwapWeapons();
+	}
 }
 
 void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
@@ -762,6 +766,11 @@ void ABlasterCharacter::ServerEquipWeapon_Implementation()
 	/// OverlappingWeapon 只复制给了 owner，所以只有 owner 可以拾取武器
 	/// 其他 client 端的 OverlappingWeapon 为 nullptr，所以不能拾取武器
 	if (Combat) Combat->EquipWeapon(OverlappingWeapon);
+}
+
+void ABlasterCharacter::ServerSwapWeapons_Implementation()
+{
+	if (Combat) Combat->SwapWeapons();
 }
 
 void ABlasterCharacter::SeverDropWeapon_Implementation()

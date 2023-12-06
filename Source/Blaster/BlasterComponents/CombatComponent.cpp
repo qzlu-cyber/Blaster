@@ -337,6 +337,24 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	UpdateSecondaryAmmo();
 }
 
+void UCombatComponent::SwapWeapons()
+{
+	AWeapon* TmpWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TmpWeapon;
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	PlayEquipWeaponSound(EquippedWeapon); 	// 播放装备武器的音效
+	EquippedWeapon->SetAmmoHUD(); // 设置武器的弹药 HUD
+	UpdateCarriedAmmo(); // 更新武器总携带的弹药并设置 HUD
+	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload(); 	// 检查是否需要换弹
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToBack(SecondaryWeapon);
+	UpdateSecondaryAmmo();
+}
+
 void UCombatComponent::DropWeapon()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
@@ -359,6 +377,10 @@ void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
 		// 所以就需要在拾起武器前将碰撞和物理属性都给禁用
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachActorToRightHand(EquippedWeapon);
+
+		// 装备武器时由于会更新 weapon 的 owner，client 端在 On_RepOwner 中执行了更新 AmmoHUD 的任务
+		// 此处用于切换武器时更新 AmmoHUD
+		EquippedWeapon->SetAmmoHUD();
 
 		// 播放装备武器的音效
 		PlayEquipWeaponSound(EquippedWeapon);
