@@ -128,35 +128,69 @@ void AWeapon::Fire(const FVector& HitTarget)
 	SpendRound();
 }
 
-// 当 WeaponState 属性改变时调用
-void AWeapon::OnRep_WeaponState()
+void AWeapon::OnEquipped()
+{
+	ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
+	// 装备武器后禁用武器的碰撞，避免武器碰撞到角色后在 server 端生成重叠事件再次显示拾取提示
+	WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	}
+	WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
+}
+
+void AWeapon::OnEquippedSecondary()
+{
+	ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
+	// 装备武器后禁用武器的碰撞，避免武器碰撞到角色后在 server 端生成重叠事件再次显示拾取提示
+	WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	}
+	WeaponMesh->SetRenderCustomDepth(true);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+	WeaponMesh->MarkRenderStateDirty();
+}
+
+void AWeapon::OnDropped()
+{
+	if (HasAuthority()) WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
+	/// 绘制 Outline
+	WeaponMesh->SetRenderCustomDepth(true);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+	WeaponMesh->MarkRenderStateDirty();
+}
+
+void AWeapon::OnWeaponStateSet()
 {
 	switch (WeaponState)
 	{
-		case EWeaponState::EWS_Equipped:
-			ShowWeaponPickupWidget(false);
-			WeaponMesh->SetSimulatePhysics(false);
-			WeaponMesh->SetEnableGravity(false);
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
-			{
-				WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-				WeaponMesh->SetEnableGravity(true);
-				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-			}
-			WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
+		case EWeaponState::EWS_Equipped: // 被拾取
+			OnEquipped();
+			break;
+		case EWeaponState::EWS_EquippedSecondary: // 被拾取为副武器
+			OnEquippedSecondary();
 			break;
 		case EWeaponState::EWS_Dropped: // 被丢弃
-			WeaponMesh->SetSimulatePhysics(true);
-			WeaponMesh->SetEnableGravity(true);
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
-			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
-			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
-			// 绘制 Outline
-			WeaponMesh->SetRenderCustomDepth(true);
-			WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
-			WeaponMesh->MarkRenderStateDirty();
+			OnDropped();
 			break;
 		default: break;
 	}
@@ -165,38 +199,14 @@ void AWeapon::OnRep_WeaponState()
 void AWeapon::SetWeaponState(EWeaponState NewState)
 {
 	WeaponState = NewState;
-	switch (WeaponState)
-	{
-		case EWeaponState::EWS_Equipped: // 被拾取
-			ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
-			// 装备武器后禁用武器的碰撞，避免武器碰撞到角色后在 server 端生成重叠事件再次显示拾取提示
-			WeaponCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			WeaponMesh->SetSimulatePhysics(false);
-			WeaponMesh->SetEnableGravity(false);
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if (WeaponType == EWeaponTypes::EWT_SubmachineGun) // 如果是冲锋枪，启用 strap 模拟物理的特性
-			{
-				WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-				WeaponMesh->SetEnableGravity(true);
-				WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-			}
-			WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
-			break;
-		case EWeaponState::EWS_Dropped: // 被丢弃
-			if (HasAuthority()) WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // 开启武器的碰撞
-			WeaponMesh->SetSimulatePhysics(true);
-			WeaponMesh->SetEnableGravity(true);
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block); // 设置碰撞响应
-			WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 设置忽略 Pawn 的碰撞
-			WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore); // 设置忽略 Camera 的碰撞
-			/// 绘制 Outline
-			WeaponMesh->SetRenderCustomDepth(true);
-			WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
-			WeaponMesh->MarkRenderStateDirty();
-			break;
-		default: break;
-	}
+
+	OnWeaponStateSet();
+}
+
+// 当 WeaponState 属性改变时调用
+void AWeapon::OnRep_WeaponState()
+{
+	OnWeaponStateSet();
 }
 
 void AWeapon::SetAmmoHUD()

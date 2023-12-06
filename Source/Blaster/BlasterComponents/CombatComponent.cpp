@@ -327,7 +327,7 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	if (WeaponToEquip == nullptr) return;
 
 	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	
 	AttachActorToBack(WeaponToEquip);
 	
@@ -350,7 +350,7 @@ void UCombatComponent::SwapWeapons()
 	UpdateCarriedAmmo(); // 更新武器总携带的弹药并设置 HUD
 	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload(); 	// 检查是否需要换弹
 
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBack(SecondaryWeapon);
 	UpdateSecondaryAmmo();
 }
