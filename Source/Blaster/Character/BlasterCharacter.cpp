@@ -655,9 +655,16 @@ void ABlasterCharacter::Elim()
 	// 丢掉或销毁武器
 	if (Combat)
 	{
-		if (Combat->EquippedWeapon && !Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon();
-		if (Combat->EquippedWeapon && Combat->EquippedWeapon->bDestroyWeapon) Combat->EquippedWeapon->Destroy();
-		if (Combat->SecondaryWeapon) Combat->SecondaryWeapon->Destroy();
+		if (Combat->EquippedWeapon)
+		{
+			if (!Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon(Combat->EquippedWeapon);
+			else Combat->EquippedWeapon->Destroy();
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			if (!Combat->SecondaryWeapon->bDestroyWeapon) Combat->DropWeapon(Combat->SecondaryWeapon);
+			else Combat->SecondaryWeapon->Destroy();
+		}
 	}
 	
 	MulticastElim();
@@ -713,7 +720,7 @@ void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 
 void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
 {
-	if (Combat && Combat->EquippedWeapon) SeverDropWeapon();
+	if (Combat && Combat->EquippedWeapon) SeverDropWeapon(Combat->EquippedWeapon);
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -773,9 +780,9 @@ void ABlasterCharacter::ServerSwapWeapons_Implementation()
 	if (Combat) Combat->SwapWeapons();
 }
 
-void ABlasterCharacter::SeverDropWeapon_Implementation()
+void ABlasterCharacter::SeverDropWeapon_Implementation(AWeapon* WeaponToDrop)
 {
-	if (Combat) Combat->DropWeapon();
+	if (Combat) Combat->DropWeapon(WeaponToDrop);
 }
 
 void ABlasterCharacter::ServerAiming_Implementation(bool bAiming)

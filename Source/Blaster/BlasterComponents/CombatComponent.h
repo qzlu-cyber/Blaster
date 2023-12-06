@@ -41,7 +41,7 @@ public:
 	// 角色切换武器
 	void SwapWeapons();
 	// 角色卸下武器
-	void DropWeapon();
+	void DropWeapon(AWeapon* WeaponToDrop);
 	// 角色瞄准
 	void Aiming(bool bAiming);
 	void Shoot();
