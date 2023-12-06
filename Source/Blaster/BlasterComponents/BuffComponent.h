@@ -23,12 +23,14 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 	void Heal(float HealAmount, float HealingTime);
+	void ShieldHeal(float ShieldHealAmount, float HealingTime);
 
 	void SetInitialSpeeds(float WalkSpeed, float CrouchSpeed);
 	void SpeedBuff(float WalkBuffSpeed, float CrouchBuffSpeed, float SpeedBuffTime);
 
 private:
 	void HealRampUp(float DeltaTime);
+	void ShieldHealRampUp(float DeltaTime);
 
 	void SpeedTimerFinished();
 
@@ -43,6 +45,11 @@ private:
 	bool bIsHealing = false; // 是否正在恢复血量
 	float HealingRate = 0.f; // 每秒恢复的血量
 	float AmountToHeal = 0.f; // 总共需要恢复的血量
+
+	/// Shield Buff
+	bool bIsShieldHealing = false;
+	float ShieldHealingRate = 0.f;
+	float AmountToShieldHeal = 0.f;
 
 	/// Speed Buff
 	float InitialWalkSpeed; // 角色初始步行速度
