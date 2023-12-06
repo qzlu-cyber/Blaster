@@ -106,6 +106,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound;
 
+	bool bDestroyWeapon = false; // 设置角色默认武器在死亡后自动销毁
+
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;

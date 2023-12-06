@@ -201,28 +201,6 @@ void UCombatComponent::PickupAmmo(EWeaponTypes WeaponType, int32 AmmoAmount)
 	}
 }
 
-void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
-{
-	if (EquippedWeapon && Character)
-	{
-		// SetWeaponState 处理了碰撞属性，当角色试图拿起被丢弃的武器时，此时武器是有物理属性的，这就无法把武器 attach 到角色的手上
-		// 所以就需要在拾起武器前将碰撞和物理属性都给禁用
-		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-		AttachActorToRightHand(EquippedWeapon);
-
-		// 播放装备武器的音效
-		PlayEquipWeaponSound();
-		
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
-		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
-	}
-
-	if (LastEquippedWeapon)
-	{
-		if (LastEquippedWeapon->GetBlasterOwnerPlayerController()) LastEquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
-	}
-}
-
 void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach)
 {
 	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
@@ -326,6 +304,28 @@ void UCombatComponent::DropWeapon()
 	EquippedWeapon = nullptr;
 }
 
+void UCombatComponent::OnRep_EquippedWeapon(AWeapon* LastEquippedWeapon)
+{
+	if (EquippedWeapon && Character)
+	{
+		// SetWeaponState 处理了碰撞属性，当角色试图拿起被丢弃的武器时，此时武器是有物理属性的，这就无法把武器 attach 到角色的手上
+		// 所以就需要在拾起武器前将碰撞和物理属性都给禁用
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRightHand(EquippedWeapon);
+
+		// 播放装备武器的音效
+		PlayEquipWeaponSound();
+		
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
+		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	}
+
+	if (LastEquippedWeapon)
+	{
+		if (LastEquippedWeapon->GetBlasterOwnerPlayerController()) LastEquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+	}
+}
+
 void UCombatComponent::OnRep_IsAiming(bool bLastIsAiming)
 {
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bLastIsAiming ? BaseWalkSpeed : AimWalkSpeed;
@@ -340,9 +340,10 @@ void UCombatComponent::OnRep_CarriedWeaponAmmo()
 	if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
 
 	// 当装备的武器是霰弹枪，且正在换弹且没有多余子弹了，直接跳转
-	if (EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun &&
-	CombatState == ECombatState::ECS_Reloading &&
-	CarriedWeaponAmmo == 0) JumpToShotgunEnd();
+	if (EquippedWeapon &&
+		EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun &&
+		CombatState == ECombatState::ECS_Reloading &&
+		CarriedWeaponAmmo == 0) JumpToShotgunEnd();
 }
 
 void UCombatComponent::Aiming(bool bAiming)

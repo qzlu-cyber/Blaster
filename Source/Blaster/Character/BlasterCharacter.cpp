@@ -105,6 +105,16 @@ void ABlasterCharacter::UpdateShieldHUD()
 	if (BlasterPlayerController) BlasterPlayerController->SetBlasterShieldHUD(Shield, MaxShield); // 设置 HUD 的护盾条
 }
 
+void ABlasterCharacter::UpdateAmmoHUD()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		BlasterPlayerController->SetCarriedAmmoHUD(Combat->CarriedWeaponAmmo);
+		BlasterPlayerController->SetWeaponAmmoHUD(Combat->EquippedWeapon->GetAmmo());
+	}
+}
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -114,6 +124,9 @@ void ABlasterCharacter::BeginPlay()
 
 	UpdateShieldHUD(); // 初始化护盾条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 	UpdateHealthHUD(); // 初始化血条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
+
+	SpawnDefaultWeapon(); // 生成默认武器
+	UpdateAmmoHUD(); // 初始化弹药 HUD
 
 	if (Combat) Combat->UpdateGrenades(); // 初始化手雷数量
 
@@ -151,6 +164,19 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 		if (TimeSinceLastMovementReplication > 0.25f) OnRep_ReplicatedMovement();
 
 		CalculateAOPitch();
+	}
+}
+
+void ABlasterCharacter::SpawnDefaultWeapon()
+{
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (BlasterGameMode && World && !bIsElimmed && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		
+		if (Combat) Combat->EquipWeapon(StartingWeapon);
 	}
 }
 
@@ -529,7 +555,7 @@ void ABlasterCharacter::Reload(const FInputActionValue& Value)
 
 void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 {
-	if (!Combat && !Combat->EquippedWeapon) return;
+	if (!Combat || !Combat->EquippedWeapon) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
 	if (AnimInstance && FireWeaponMontage)
@@ -542,7 +568,7 @@ void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
 
 void ABlasterCharacter::PlayReloadMontage()
 {
-	if (!Combat && !Combat->EquippedWeapon) return;
+	if (!Combat || !Combat->EquippedWeapon) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
 	if (AnimInstance && ReloadMontage)
@@ -592,7 +618,7 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
-	if (!Combat && !Combat->EquippedWeapon) return;
+	if (!Combat || !Combat->EquippedWeapon) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
 	if (AnimInstance && HitReactMontage)
@@ -626,6 +652,13 @@ void ABlasterCharacter::StartDissolveTimeline()
 
 void ABlasterCharacter::Elim()
 {
+	// 丢掉或销毁武器
+	if (Combat)
+	{
+		if (!Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon();
+		else Combat->EquippedWeapon->Destroy();
+	}
+	
 	MulticastElim();
 
 	// 重生
@@ -665,8 +698,6 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	// 禁用碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	// 丢掉武器
-	if (Combat) Combat->DropWeapon();
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用

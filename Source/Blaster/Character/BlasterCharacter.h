@@ -34,6 +34,7 @@ public:
 	
 	void UpdateHealthHUD();
 	void UpdateShieldHUD();
+	void UpdateAmmoHUD();
 
 protected:
 	// Called when the game starts or when spawned
@@ -169,6 +170,9 @@ private:
 	void PollInit();
 
 	void RotateInPlace(float DeltaTime);
+
+	// 生成默认武器
+	void SpawnDefaultWeapon();
 	
 private:
 	/// PlayerController
@@ -244,6 +248,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;
 
+	/// Default Weapon
+	UPROPERTY(EditAnywhere, Category="Weapon")
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+	
 	/// Weapon Overlapping
 	UPROPERTY(ReplicatedUsing=OnRep_OverlappingWeapon)
 	AWeapon* OverlappingWeapon;

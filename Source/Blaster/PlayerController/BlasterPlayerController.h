@@ -98,4 +98,8 @@ private:
 	bool bInitializeDeath = false;
 	int32 GrenadeHUD;
 	bool bInitializeGrenade = false;
+	int32 WeaponAmmoHUD;
+	bool bInitializeWeaponAmmo = false;
+	int32 CarriedAmmoHUD;
+	bool bInitializeCarriedAmmo = false;
 };
