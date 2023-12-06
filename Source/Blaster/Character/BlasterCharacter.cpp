@@ -115,6 +115,8 @@ void ABlasterCharacter::BeginPlay()
 	UpdateShieldHUD(); // 初始化护盾条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 	UpdateHealthHUD(); // 初始化血条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 
+	if (Combat) Combat->UpdateGrenades(); // 初始化手雷数量
+
 	// 由 server 端统一处理受到伤害的逻辑
 	if (HasAuthority()) OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage); // 注册受到伤害时的回调函数
 }
