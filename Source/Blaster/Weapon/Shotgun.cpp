@@ -6,12 +6,15 @@
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
-void AShotgun::Fire(const FVector& HitTarget)
+#define TRACE_LENGTH 80000.f
+
+void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
-	AWeapon::Fire(HitTarget); // 播放开枪动画、生成弹壳、更新 HUD
+	AWeapon::Fire(FVector()); // 播放开枪动画、生成弹壳、更新 HUD
 	
 	// 获取武器的 MuzzleFlash
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
@@ -22,7 +25,7 @@ void AShotgun::Fire(const FVector& HitTarget)
 		FVector Start = MuzzleFlashTransform.GetLocation();
 
 		TMap<ABlasterCharacter*, int32> HitCharactersMap; // 保存击中的角色和对应的击中次数
-		for (uint32 i = 0; i < NumberOfPellets; ++i)
+		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult FireHit;
 			WeaponTraceHit(Start, HitTarget, FireHit);
@@ -60,15 +63,41 @@ void AShotgun::Fire(const FVector& HitTarget)
 			}
 		}
 
-		for (const auto &Pair : HitCharactersMap)
+		if (HasAuthority())
 		{
-			UGameplayStatics::ApplyDamage(
-				Pair.Key,
-				Damage * Pair.Value,
-				GetOwner()->GetInstigatorController(),
-				this,
-				UDamageType::StaticClass()
-			);
+			for (const auto &Pair : HitCharactersMap)
+			{
+				UGameplayStatics::ApplyDamage(
+					Pair.Key,
+					Damage * Pair.Value,
+					GetOwner()->GetInstigatorController(),
+					this,
+					UDamageType::StaticClass()
+				);
+			}
 		}
+	}
+}
+
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr) return;
+	// 获取 MuzzleFlash 的位置
+	FTransform MuzzleFlashTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	FVector TraceStart = MuzzleFlashTransform.GetLocation();
+
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere; // 球心
+	
+	// 随机生成 NumberOfPellets 个散射方向
+	for (uint32 i = 0; i < NumberOfPellets; ++i)
+	{
+		const FVector RandomVectorInSphere = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius); // 随机散射方向
+		const FVector TraceEnd = SphereCenter + RandomVectorInSphere; // TraceEnd 位置
+		const FVector ToTraceLoc = TraceEnd - TraceStart;
+		const FVector ToTraceEnd = TraceStart + ToTraceLoc * TRACE_LENGTH / ToTraceLoc.Size();
+
+		HitTargets.Add(ToTraceEnd);
 	}
 }

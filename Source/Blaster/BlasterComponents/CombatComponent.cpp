@@ -6,6 +6,7 @@
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/Weapon/Projectile.h"
+#include "Blaster/Weapon/Shotgun.h"
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
@@ -17,6 +18,7 @@
 
 #define TRACE_LENGTH 80000.f
 
+class AShotgun;
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
@@ -509,27 +511,40 @@ void UCombatComponent::FireTimerFinished()
 
 void UCombatComponent::FireProjectileWeapon()
 {
-	// 在本机播放开火动画等
-	LocalFire(HitTarget);
-	/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
-	/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
-	/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
-	/// 再由服务端 Replicates 数据并同步给客户端
-	ServerFire(HitTarget);
+	if (Character && EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->IsUseScatter() ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		
+		if (!Character->HasAuthority()) LocalFire(HitTarget); // 在本机播放开火动画等，server 端会在 多播 RPC 中执行
+		/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
+		/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+		/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+		/// 再由服务端 Replicates 数据并同步给客户端
+		ServerFire(HitTarget);
+	}
 }
 
 void UCombatComponent::FireHitScanWeapon()
 {
-	if (EquippedWeapon)
+	if (Character && EquippedWeapon)
 	{
 		HitTarget = EquippedWeapon->IsUseScatter() ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
-		LocalFire(HitTarget);
+		if (!Character->HasAuthority()) LocalFire(HitTarget);
 		ServerFire(HitTarget); // 将 client 端生成的散射传给 server 端
 	}
 }
 
 void UCombatComponent::FireShotgun()
 {
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Character && Shotgun)
+	{
+		TArray<FVector_NetQuantize> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
+
+		if (!Character->HasAuthority()) ShotgunLocalFire(HitTargets);
+		ServerShotgunFire(HitTargets);
+	}
 }
 
 void UCombatComponent::Shoot()
@@ -806,6 +821,19 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	LocalFire(TraceHitTarget);
 }
 
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	MulticastShotgunFire(TraceHitTargets);
+}
+
+void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	// 本机不再重复播放开火动画等
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+
+	ShotgunLocalFire(TraceHitTargets);
+}
+
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (!EquippedWeapon) return;
@@ -816,12 +844,18 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 		Character->PlayFireWeaponMontage(bIsAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
 	}
+}
 
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun == nullptr || Character == nullptr) return;
+	
 	// 针对霰弹枪例外
-	if (Character && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_Shotgun)
+	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireWeaponMontage(bIsAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
+		Shotgun->FireShotgun(TraceHitTargets);
 		// 射击后更新 CombatState 以保证其之后还可换弹
 		CombatState = ECombatState::ECS_Unoccupied;
 	}
