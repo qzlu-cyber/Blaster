@@ -33,6 +33,10 @@ public:
 	void SetGrenadeHUD(int32 GrenadeAmount);
 	void SetCountdownHUD(float Countdown);
 	void SetAnnouncementCountdownHUD(float Countdown);
+
+	void HighPingWarning();
+	void StopHighPingWarning();
+	
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual float GetServerTime() const;
@@ -82,6 +86,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeSyncFrequency = 5.f; // 5 秒同步一次时间
 	float TimeSinceLastSync = 0.f; // 上次同步时间
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 100.f; // 延迟超过 300ms 就显示高延迟图片
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 10.f; // 10 秒检测一次 Ping
+	float PingCheckLastTime = 0.f; // 上次检测 Ping 的时间
 
 	UPROPERTY(ReplicatedUsing=OnRep_MatchState)
 	FName MatchState;

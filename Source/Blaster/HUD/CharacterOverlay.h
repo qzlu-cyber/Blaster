@@ -49,4 +49,9 @@ public:
 	UTextBlock* GrenadeAmount; // 手榴弹数量
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* MatchCountdownText; // 倒计时
+
+	UPROPERTY(meta=(BindWidget))
+	UImage* HighPingImage; // 高延迟图片
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	class UWidgetAnimation* HighPingAnimation; // 高延迟动画
 };
