@@ -19,6 +19,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMax")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMax")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -70,7 +80,9 @@ public:
 	FORCEINLINE float GetFireDelay() const { return FireDelay; }
 	FORCEINLINE bool IsEmptyAmmo() const { return Ammo <= 0; }
 	FORCEINLINE bool IsFullAmmo() const { return Ammo == MaxAmmoCapacity; }
+	FORCEINLINE bool IsUseScatter() const { return bUseScatter; }
 	FORCEINLINE EWeaponTypes GetWeaponType() const { return WeaponType; }
+	FORCEINLINE EFireType GetWeaponFireType() const { return FireType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMaxAmmoCapacity() const { return MaxAmmoCapacity; }
 
@@ -80,6 +92,8 @@ public:
 
 	// 装弹
 	void AddAmmo(int32 AmmoToAdd);
+
+	FVector TraceEndWithScatter(const FVector& HitTarget);
 
 private:
 	UFUNCTION()
@@ -115,6 +129,15 @@ public:
 
 	bool bDestroyWeapon = false; // 设置角色默认武器在死亡后自动销毁
 
+protected:
+	/// Trace end with scatter 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.f;
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -136,6 +159,9 @@ private:
 	// 武器类型
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	EWeaponTypes WeaponType;
+	// 武器开火类型
+	UPROPERTY(EditAnywhere, Category="Weapon Properties")
+	EFireType FireType;
 
 	// 用于更新 AmmoHUD
 	UPROPERTY()

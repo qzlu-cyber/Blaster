@@ -11,6 +11,9 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#define TRACE_LENGTH 80000.f
 
 // Sets default values
 AWeapon::AWeapon()
@@ -123,6 +126,23 @@ void AWeapon::Fire(const FVector& HitTarget)
 	}
 	// 减少弹药并更新 AmmoHUD
 	if (HasAuthority()) SpendRound();
+}
+
+FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr) return FVector();
+	// 获取 MuzzleFlash 的位置
+	FTransform MuzzleFlashTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	FVector TraceStart = MuzzleFlashTransform.GetLocation();
+	
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere; // 球心
+	const FVector RandomVectorInSphere = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius); // 随机散射方向
+	const FVector TraceEnd = SphereCenter + RandomVectorInSphere; // TraceEnd 位置
+	const FVector ToTraceEnd = TraceEnd - TraceStart;
+
+	return FVector(TraceStart + ToTraceEnd * TRACE_LENGTH / ToTraceEnd.Size());
 }
 
 void AWeapon::OnEquipped()

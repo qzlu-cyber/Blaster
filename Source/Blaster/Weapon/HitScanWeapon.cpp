@@ -6,7 +6,6 @@
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
@@ -80,32 +79,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	}
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere; // 球心
-	const FVector RandomVectorInSphere = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius); // 随机散射方向
-	const FVector TraceEnd = SphereCenter + RandomVectorInSphere; // TraceEnd 位置
-	const FVector ToTraceEnd = TraceEnd - TraceStart;
-
-	// DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	// DrawDebugSphere(GetWorld(), TraceEnd, 4.f, 12, FColor::Orange, true);
-	// DrawDebugLine(
-	// 	GetWorld(),
-	// 	TraceStart,
-	// 	FVector(TraceStart + ToTraceEnd * TRACE_LENGTH / ToTraceEnd.Size()),
-	// 	FColor::Cyan,
-	// 	true);
-
-	return FVector(TraceStart + ToTraceEnd * TRACE_LENGTH / ToTraceEnd.Size());
-}
-
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit)
 {
 	UWorld* World = GetWorld();
 	if (World)
 	{
-		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 		World->LineTraceSingleByChannel(
 			OutHit,
 			TraceStart,

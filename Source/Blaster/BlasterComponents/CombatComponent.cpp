@@ -507,19 +507,47 @@ void UCombatComponent::FireTimerFinished()
 	if (EquippedWeapon->IsEmptyAmmo() && CarriedWeaponAmmo > 0) Reload();
 }
 
+void UCombatComponent::FireProjectileWeapon()
+{
+	// 在本机播放开火动画等
+	LocalFire(HitTarget);
+	/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
+	/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+	/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
+	/// 再由服务端 Replicates 数据并同步给客户端
+	ServerFire(HitTarget);
+}
+
+void UCombatComponent::FireHitScanWeapon()
+{
+	if (EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->IsUseScatter() ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		LocalFire(HitTarget);
+		ServerFire(HitTarget); // 将 client 端生成的散射传给 server 端
+	}
+}
+
+void UCombatComponent::FireShotgun()
+{
+}
+
 void UCombatComponent::Shoot()
 {
 	if (CanFire())
 	{
 		bCanFire = false;
-		/// 当按下开火键时，要么是在客户端控制角色，要么是在服务端控制角色
-		/// 当在服务端时，调用 Server 类型 RPC ServerFire，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
-		/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
-		/// 再由服务端 Replicates 数据并同步给客户端
-		ServerFire(HitTarget);
 
-		// 在本机播放开火动画等
-		LocalFire(HitTarget);
+		if (EquippedWeapon)
+		{
+			switch (EquippedWeapon->GetWeaponFireType())
+			{
+				case EFireType::EFT_Projectile: FireProjectileWeapon(); break;
+				case EFireType::EFT_HitScan: FireHitScanWeapon(); break;
+				case EFireType::EFT_Shotgun: FireShotgun(); break;
+				default: break;
+			}
+		}
 
 		CrosshairShootingFactor = 0.75f;
 

@@ -137,6 +137,10 @@ private:
 
 	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 
+	void FireProjectileWeapon();
+	void FireHitScanWeapon();
+	void FireShotgun();
+
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character; // 将 CombatComponent 挂载到的角色
