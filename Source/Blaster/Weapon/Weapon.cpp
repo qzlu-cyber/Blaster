@@ -125,7 +125,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		}
 	}
 	// 减少弹药并更新 AmmoHUD
-	SpendRound();
+	if (HasAuthority()) SpendRound();
 }
 
 void AWeapon::OnEquipped()

@@ -301,7 +301,7 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	if (WeaponToEquip == nullptr) return;
 	
 	// 角色已装备武器时再次拾取需要先丢弃已有武器
-	if (EquippedWeapon) DropWeapon(EquippedWeapon);
+	if (EquippedWeapon) DropWeapon();
 
 	// 装配武器
 	// 两件事会被复制，一是武器上的武器状态本身，二是附加到角色的行为
@@ -358,6 +358,17 @@ void UCombatComponent::SwapWeapons()
 	}
 }
 
+void UCombatComponent::DropWeapon()
+{
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Dropped);
+	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	EquippedWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
+
+	EquippedWeapon->SetOwner(nullptr);
+	if (EquippedWeapon->GetBlasterOwnerPlayerController()) EquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
+	EquippedWeapon = nullptr;
+}
+
 void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 {
 	if (Character == nullptr || WeaponToDrop == nullptr) return;
@@ -373,7 +384,7 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 		if (EquippedWeapon->GetBlasterOwnerPlayerController()) EquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 		EquippedWeapon = nullptr;
 
-		// 如果丢弃的是主武器且角色还装备有服务器，则自动将服务器装备为主武器
+		// 如果丢弃的是主武器且角色还装备有副武器，则自动将服务器装备为主武器
 		if (SecondaryWeapon) SwapWeapons();
 	}
 }
