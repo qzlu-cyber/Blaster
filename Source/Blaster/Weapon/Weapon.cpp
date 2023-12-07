@@ -48,15 +48,12 @@ void AWeapon::BeginPlay()
 
 	if (PickupWidget) PickupWidget->SetVisibility(false);
 
-	if (HasAuthority())
-	{
-		WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		WeaponCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); // 设置为 overlap, 角色可以拾取
-
-		// 在委托中绑定回调函数
-		WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
-		WeaponCollision->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
-	}
+	/// 已经设置了只有 server 才能装备武器，因此该操作是安全的，可以在 client 本地立即显示 pickup widget
+	WeaponCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	WeaponCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); // 设置为 overlap, 角色可以拾取
+	// 在委托中绑定回调函数
+	WeaponCollision->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+	WeaponCollision->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 }
 
 // Called every frame
