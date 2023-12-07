@@ -92,7 +92,7 @@ private:
 	void OnRep_CombatState();
 	UFUNCTION()
 	void OnRep_Grenades();
-	
+
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 	UFUNCTION(NetMulticast, Reliable)
@@ -134,6 +134,8 @@ private:
 
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 
 private:
 	UPROPERTY()

@@ -339,6 +339,8 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	
 	AWeapon* TmpWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TmpWeapon;
@@ -515,6 +517,9 @@ void UCombatComponent::Shoot()
 		/// 当在客户端调用 Server 类型 RPC ServerFire 时，服务器执行 MulticastFire，然后服务端和所有客户端播放 Montage 动画并调用武器开火函数
 		/// 再由服务端 Replicates 数据并同步给客户端
 		ServerFire(HitTarget);
+
+		// 在本机播放开火动画等
+		LocalFire(HitTarget);
 
 		CrosshairShootingFactor = 0.75f;
 
@@ -766,6 +771,14 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	// 本机不再重复播放开火动画等
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+	
+	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (!EquippedWeapon) return;
 
