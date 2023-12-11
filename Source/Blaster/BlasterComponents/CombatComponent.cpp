@@ -615,7 +615,7 @@ void UCombatComponent::ThrowGrenade()
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if (Character) Character->PlayReloadMontage();
 }
 
 void UCombatComponent::FinishReloading()
@@ -729,6 +729,7 @@ void UCombatComponent::Reload()
 		EquippedWeapon->GetAmmo() < EquippedWeapon->GetMaxAmmoCapacity() &&
 		CombatState == ECombatState::ECS_Unoccupied)
 	{
+		HandleReload(); // 按下换弹按钮立刻播放动画
 		ServerReload();
 	}
 }
@@ -738,7 +739,7 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 		case ECombatState::ECS_Reloading:
-			HandleReload();
+			if (Character && !Character->IsLocallyControlled()) HandleReload(); // 不再重复播放换弹动画
 			break;
 		case ECombatState::ECS_Unoccupied:
 			if (bIsFire) Shoot();
@@ -816,8 +817,9 @@ void UCombatComponent::ServerReload_Implementation()
 {
 	if (!Character || !EquippedWeapon) return;
 	
-	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	CombatState = ECombatState::ECS_Reloading; // CombatState 为 Replicated，更改时 client 端播放 ReloadMontage
+	
+	if (Character && !Character->IsLocallyControlled()) HandleReload(); // server 端不再重复播放 ReloadMontage
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
