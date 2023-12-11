@@ -83,7 +83,7 @@ private:
 	UFUNCTION()
 	void OnRep_SecondaryWeapon();
 	UFUNCTION()
-	void OnRep_IsAiming(bool bLastIsAiming);
+	void OnRep_IsAiming();
 	UFUNCTION()
 	void OnRep_CarriedWeaponAmmo();
 	UFUNCTION()
@@ -93,6 +93,8 @@ private:
 	UFUNCTION()
 	void OnRep_Grenades();
 
+	UFUNCTION(Server, Reliable)
+	void ServerAiming(bool bAiming);
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 	UFUNCTION(NetMulticast, Reliable)
@@ -163,7 +165,10 @@ private:
 	AWeapon* SecondaryWeapon; // 副武器
 
 	UPROPERTY(ReplicatedUsing=OnRep_IsAiming)
-	bool bIsAiming; // 是否在瞄准
+	bool bIsAiming = false; // 是否在瞄准
+	/// 在复制 bAiming 时，应该检查是否真的按住了瞄准按钮，否则在延迟高的情况下会出现异常抽搐情况
+	/// 一个布尔值来表示本地控制的角色是否真的按住了瞄准按钮，代表是否按住了瞄准按钮的真实值
+	bool bAimingButtonPressed = false;
 	bool bIsFire; // 是否在开火
 
 	UPROPERTY(EditAnywhere)

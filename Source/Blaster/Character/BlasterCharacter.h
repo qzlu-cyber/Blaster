@@ -151,8 +151,6 @@ private:
 	void ServerSwapWeapons();
 	UFUNCTION(Server, Reliable)
 	void SeverDropWeapon(AWeapon* WeaponToDrop);
-	UFUNCTION(Server, Reliable)
-	void ServerAiming(bool bAiming);
 
 	void HideCameraIfCharacterClose();
 

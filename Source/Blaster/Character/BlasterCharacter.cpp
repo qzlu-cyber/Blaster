@@ -511,20 +511,10 @@ void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
 
-	if (Value.GetMagnitude() > 0.f)
-	{
-		bIsAiming = true;
-		
-		if (HasAuthority()) Combat->Aiming(true);
-		else ServerAiming(true);
-	}
-	else
-	{
-		bIsAiming = false;
-		
-		if (HasAuthority()) Combat->Aiming(false);
-		else ServerAiming(false);
-	}
+	if (Value.GetMagnitude() > 0.f) bIsAiming = true;
+	else bIsAiming = false;
+
+	if (Combat) Combat->Aiming(bIsAiming);
 }
 
 void ABlasterCharacter::Fire(const FInputActionValue& Value)
@@ -783,11 +773,6 @@ void ABlasterCharacter::ServerSwapWeapons_Implementation()
 void ABlasterCharacter::SeverDropWeapon_Implementation(AWeapon* WeaponToDrop)
 {
 	if (Combat) Combat->DropWeapon(WeaponToDrop);
-}
-
-void ABlasterCharacter::ServerAiming_Implementation(bool bAiming)
-{
-	if (Combat) Combat->Aiming(bAiming);
 }
 
 bool ABlasterCharacter::IsWeaponEquipped() const

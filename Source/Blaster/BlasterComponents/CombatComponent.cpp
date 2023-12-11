@@ -432,9 +432,11 @@ void UCombatComponent::OnRep_SecondaryWeapon()
 	}
 }
 
-void UCombatComponent::OnRep_IsAiming(bool bLastIsAiming)
+void UCombatComponent::OnRep_IsAiming()
 {
-	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bLastIsAiming ? BaseWalkSpeed : AimWalkSpeed;
+	if (Character && Character->IsLocallyControlled()) bIsAiming = bAimingButtonPressed;
+	
+	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 
 	// 角色是当前客户端控制的角色且装备的是狙击枪时，显示狙击枪的准星
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle) Character->ShowSniperScopeWidget(bIsAiming);
@@ -464,10 +466,14 @@ void UCombatComponent::Aiming(bool bAiming)
 	
 	bIsAiming = bAiming;
 
+	ServerAiming(bAiming);
+
 	if (Character) Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
 
 	// 角色是当前客户端控制的角色且装备的是狙击枪时，显示狙击枪的准星
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponTypes::EWT_SniperRifle) Character->ShowSniperScopeWidget(bIsAiming);
+	
+	if (Character->IsLocallyControlled()) bAimingButtonPressed = bAiming; // 获得本地控制的角色是否真正按下了瞄准按钮
 }
 
 bool UCombatComponent::CanFire() const
@@ -754,6 +760,13 @@ void UCombatComponent::OnRep_CombatState()
 void UCombatComponent::OnRep_Grenades()
 {
 	UpdateGrenades();
+}
+
+void UCombatComponent::ServerAiming_Implementation(bool bAiming)
+{
+	bIsAiming = bAiming;
+
+	if (Character && Character->GetCharacterMovement()) Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 }
 
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
