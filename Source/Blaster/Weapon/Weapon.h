@@ -98,10 +98,7 @@ public:
 private:
 	UFUNCTION()
 	void OnRep_WeaponState();
-
-	UFUNCTION()
-	void OnRep_Ammo();
-	// server 端执行减少子弹及更新 AmmoHUD
+	
 	void SpendRound();
 
 	void OnWeaponStateSet();
@@ -109,6 +106,11 @@ private:
 	void OnEquipped();
 	void OnEquippedSecondary();
 	void OnDropped();
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 
 public:
 	/// 绘制准星的材质
@@ -182,8 +184,11 @@ private:
 	float FireDelay = 0.15f; // 连发武器的开火间隔
 
 	/// 弹药
-	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo; // 每梭子当前剩余子弹数
 	UPROPERTY(EditAnywhere)
 	int32 MaxAmmoCapacity; // 每梭子子弹数
+	// server 端还没处理的 Ammo 更新请求的序列
+	// 在 SpendRound 中增加，在 ClientUpdateAmmo 中减少
+	int32 Sequence = 0;
 };

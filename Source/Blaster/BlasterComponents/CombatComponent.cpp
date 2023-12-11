@@ -652,7 +652,7 @@ void UCombatComponent::UpdateAmmos()
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
 		CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		EquippedWeapon->AddAmmo(-ReloadAmount);
+		EquippedWeapon->AddAmmo(ReloadAmount);
 		// server 端更新 HUD
 		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
 		if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);
@@ -667,7 +667,7 @@ void UCombatComponent::UpdateShotgunAmmo()
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1; // 每次装填 1 发子弹
 		CarriedWeaponAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		EquippedWeapon->AddAmmo(-1);
+		EquippedWeapon->AddAmmo(1);
 		// server 端更新 HUD
 		PlayerController = PlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : PlayerController;
 		if (PlayerController) PlayerController->SetCarriedAmmoHUD(CarriedWeaponAmmo);

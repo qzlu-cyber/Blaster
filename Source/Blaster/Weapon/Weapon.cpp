@@ -71,7 +71,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 /**
@@ -125,7 +124,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		}
 	}
 	// 减少弹药并更新 AmmoHUD
-	if (HasAuthority()) SpendRound();
+	SpendRound();
 }
 
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
@@ -241,22 +240,46 @@ void AWeapon::SpendRound()
 	Ammo = FMath::Clamp(Ammo - 1, 0, MaxAmmoCapacity);
 
 	SetAmmoHUD();
+
+	/// client 和 server 都会执行该函数
+	/// 当是 server 端时，将更新后的 Ammo 通过 RPC 发送给对应的 client
+	/// 当是 client 时，则增加一次 server 端还未处理 Ammo 的更新请求，表示 server 端的更新还没到达此 client
+	if (HasAuthority()) ClientUpdateAmmo(Ammo);
+	else ++Sequence;
+}
+
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if (HasAuthority()) return;
+	
+	Ammo = ServerAmmo; // client 端更新
+	/// 执行更正
+	--Sequence; // 调用该函数一次，代表 server 处理了一次 Ammo 的更新
+	Ammo -= Sequence; // 由于 Ammo 一次只消耗一颗，所以 Sequence 可以代表 client 已经消耗了多少颗弹药，但是 server 端还没有复制给 client
+
+	SetAmmoHUD();
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MaxAmmoCapacity);
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MaxAmmoCapacity);
 	// server 端更新 AmmoHUD
 	SetAmmoHUD();
+
+	ClientAddAmmo(AmmoToAdd);
 }
 
-void AWeapon::OnRep_Ammo()
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
 {
+	if (HasAuthority()) return;
+
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MaxAmmoCapacity);
+	
 	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
 	if (BlasterOwnerCharacter &&
 		BlasterOwnerCharacter->GetCombatComponent() &&
 		IsFullAmmo()) BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
-	
+
 	SetAmmoHUD();
 }
 
