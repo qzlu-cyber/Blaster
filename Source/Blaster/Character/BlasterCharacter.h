@@ -173,6 +173,41 @@ private:
 
 	// 生成默认武器
 	void SpawnDefaultWeapon();
+
+public:
+	/// Hit boxes used for server-side rewind
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* Head;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Pelvis;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine_02;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine_03;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArm_R;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* LowerArm_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* LowerArm_R;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Hand_R;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Thigh_R;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Calf_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Calf_R;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_L;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Foot_R;
 	
 private:
 	/// PlayerController
