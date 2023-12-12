@@ -63,7 +63,8 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& FramePackage)
 /// @param TraceStart LineTrace 起点
 /// @param HitLocation 命中位置
 /// @param HitTime 命中的时间
-void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
+/// @return 回滚结果（是否命中）
+FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart,
                                                  const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	bool bReturn = HitCharacter == nullptr ||
@@ -71,7 +72,7 @@ void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter
 		BlasterCharacter->GetLagCompensationComponent()->FrameHistory.GetHead() == nullptr ||
 		BlasterCharacter->GetLagCompensationComponent()->FrameHistory.GetTail() == nullptr;
 
-	if (bReturn) return;
+	if (bReturn) return FServerSideRewindResult();
 
 	FFramePackage FrameToCheck;
 
@@ -80,7 +81,7 @@ void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter
 	const TDoubleLinkedList<FFramePackage>& History = HitCharacter->GetLagCompensationComponent()->FrameHistory;
 	const float OldestTime = History.GetTail()->GetValue().Time;
 	const float NewestTime = History.GetHead()->GetValue().Time;
-	if (OldestTime > HitTime) return; // 如果最旧的帧的时间大于命中时间，说明太久远了，就不进行回滚
+	if (OldestTime > HitTime) return FServerSideRewindResult(); // 如果最旧的帧的时间大于命中时间，说明太久远了，就不进行回滚
 	if (OldestTime == HitTime)
 	{
 		FrameToCheck = History.GetTail()->GetValue();
@@ -117,6 +118,8 @@ void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter
 			HitTime
 		);
 	}
+
+	return ConfirmHit(HitCharacter, FrameToCheck, TraceStart, HitLocation);
 }
 
 FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame,
@@ -143,4 +146,124 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 	}
 
 	return InterpFramePackage;
+}
+
+FServerSideRewindResult ULagCompensationComponent::ConfirmHit(ABlasterCharacter* HitCharacter,
+	const FFramePackage& FramePackage, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation)
+{
+	if (HitCharacter == nullptr) return FServerSideRewindResult();
+
+	FFramePackage CurrentFramePackage; // 被击中角色当前的帧信息
+	CacheBoxInformation(HitCharacter, CurrentFramePackage);
+	MoveBoxes(HitCharacter, FramePackage); // 移动被击中角色的 HitBox 到击中时的位置
+
+	/// 重新进行 LineTrace
+	FHitResult ConfirmHitResult;
+	const FVector TranceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+	UBoxComponent* HeadBox = HitCharacter->HitBoxes[FName("head")];
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HeadBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 关闭 Mesh 的碰撞，防止 LineTrace 击中 Mesh
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		World->LineTraceSingleByChannel(
+			ConfirmHitResult,
+			TraceStart,
+			TranceEnd,
+			ECC_Visibility
+		);
+		if (ConfirmHitResult.bBlockingHit) // 击中了头部
+		{
+			ResetBoxes(HitCharacter, CurrentFramePackage); // 重置 HitBoxes，关闭 HeadBox 的碰撞
+			HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 打开 Mesh 的碰撞
+			
+			return FServerSideRewindResult{ true, true };
+		}
+		else // 没有击中头部，检查是否击中了其他部位的 Box
+		{
+			// 打开所有 HitBox 的碰撞
+			for (auto& BoxPair : HitCharacter->HitBoxes)
+			{
+				if (BoxPair.Value != nullptr)
+				{
+					BoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+					BoxPair.Value->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+				}
+			}
+
+			World->LineTraceSingleByChannel(
+				ConfirmHitResult,
+				TraceStart,
+				TranceEnd,
+				ECC_Visibility
+			);
+			if (ConfirmHitResult.bBlockingHit) // 击中了某个部位
+			{
+				ResetBoxes(HitCharacter, CurrentFramePackage); // 重置 HitBoxes，关闭 HeadBox 的碰撞
+				HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 打开 Mesh 的碰撞
+			
+				return FServerSideRewindResult{ true, false };
+			}
+		}
+	}
+
+	/// 没有击中任何部位
+	ResetBoxes(HitCharacter, CurrentFramePackage); // 重置 HitBoxes，关闭 HeadBox 的碰撞
+	HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 打开 Mesh 的碰撞
+	return FServerSideRewindResult{ false, false };
+}
+
+void ULagCompensationComponent::CacheBoxInformation(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage)
+{
+	if (HitCharacter == nullptr) return;
+
+	for (const auto& BoxPair : HitCharacter->HitBoxes)
+	{
+		if (BoxPair.Value != nullptr)
+		{
+			FBoxInformation BoxInformation;
+			BoxInformation.Location = BoxPair.Value->GetComponentLocation();
+			BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
+			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
+
+			OutFramePackage.HitBoxesInfo.Add(BoxPair.Key, BoxInformation);
+		}
+	}
+}
+
+void ULagCompensationComponent::MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage)
+{
+	if (HitCharacter == nullptr) return;
+
+	for (auto& BoxPair : HitCharacter->HitBoxes)
+	{
+		if (BoxPair.Value != nullptr)
+		{
+			const FName& BoxName = BoxPair.Key;
+			const FBoxInformation& BoxInfo = FramePackage.HitBoxesInfo[BoxName];
+
+			BoxPair.Value->SetWorldLocation(BoxInfo.Location);
+			BoxPair.Value->SetWorldRotation(BoxInfo.Rotation);
+		}
+	}
+}
+
+void ULagCompensationComponent::ResetBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage)
+{
+	if (HitCharacter == nullptr) return;
+
+	for (auto& BoxPair : HitCharacter->HitBoxes)
+	{
+		if (BoxPair.Value != nullptr)
+		{
+			const FName& BoxName = BoxPair.Key;
+			const FBoxInformation& BoxInfo = FramePackage.HitBoxesInfo[BoxName];
+
+			BoxPair.Value->SetWorldLocation(BoxInfo.Location);
+			BoxPair.Value->SetWorldRotation(BoxInfo.Rotation);
+
+			BoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
 }

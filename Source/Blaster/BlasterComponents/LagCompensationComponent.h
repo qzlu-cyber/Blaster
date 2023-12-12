@@ -29,6 +29,18 @@ struct FFramePackage
 	TMap<FName, FBoxInformation> HitBoxesInfo;
 };
 
+USTRUCT()
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bConfirmedHit; // 是否命中
+
+	UPROPERTY()
+	bool bHitHead; // 是否命中头部
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API ULagCompensationComponent : public UActorComponent
 {
@@ -46,13 +58,24 @@ public:
 protected:
 	void SaveFramePackage(FFramePackage& FramePackage);
 
-	void ServerSideRewind(class ABlasterCharacter* HitCharacter,
+	FServerSideRewindResult ServerSideRewind(
+		class ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
 		float HitTime
 	);
 
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
+	FServerSideRewindResult ConfirmHit(
+		ABlasterCharacter* HitCharacter,
+		const FFramePackage& FramePackage,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation
+	);
+	void CacheBoxInformation(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage);
+	void ResetBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage);
 
 private:
 	UPROPERTY()
