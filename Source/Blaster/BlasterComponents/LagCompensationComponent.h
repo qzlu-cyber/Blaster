@@ -52,5 +52,9 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerController* PlayerController;
 
+	TDoubleLinkedList<FFramePackage> FrameHistory; // 用双向链表来存储历史帧
+	UPROPERTY()
+	float MaxRecordTime = 4.f; // 最大记录时间
+
 	friend ABlasterCharacter;
 };
