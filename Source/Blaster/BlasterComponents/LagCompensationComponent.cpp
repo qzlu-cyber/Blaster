@@ -1,7 +1,9 @@
 #include "LagCompensationComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Weapon/Weapon.h"
 
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ULagCompensationComponent::ULagCompensationComponent()
 {
@@ -17,6 +19,13 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	SaveFramePackage();
+}
+
+void ULagCompensationComponent::SaveFramePackage()
+{
+	if (BlasterCharacter == nullptr || !BlasterCharacter->HasAuthority()) return; // 只在服务器端保存帧信息，进行回滚
+	
 	if (FrameHistory.Num() <= 1)
 	{
 		FFramePackage ThisFrame;
@@ -151,7 +160,7 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 FServerSideRewindResult ULagCompensationComponent::ConfirmHit(ABlasterCharacter* HitCharacter,
 	const FFramePackage& FramePackage, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation)
 {
-	if (HitCharacter == nullptr) return FServerSideRewindResult();
+	if (HitCharacter == nullptr || HitCharacter->GetMesh()) return FServerSideRewindResult();
 
 	FFramePackage CurrentFramePackage; // 被击中角色当前的帧信息
 	CacheBoxInformation(HitCharacter, CurrentFramePackage);
@@ -265,5 +274,21 @@ void ULagCompensationComponent::ResetBoxes(ABlasterCharacter* HitCharacter, cons
 
 			BoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
+	}
+}
+
+void ULagCompensationComponent::ServerScoreConfirm_Implementation(ABlasterCharacter* HitCharacter,
+	AWeapon* DamageCauser, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
+{
+	FServerSideRewindResult ConfirmResult = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
+	if (BlasterCharacter && DamageCauser && HitCharacter && ConfirmResult.bConfirmedHit)
+	{
+		UGameplayStatics::ApplyDamage(
+			HitCharacter, // 被击中的角色
+			DamageCauser->GetWeaponDamage(), // 伤害值
+			BlasterCharacter->Controller, // 造成伤害的控制器
+			DamageCauser, // DamageCause
+			UDamageType::StaticClass() // 伤害类型
+		);
 	}
 }

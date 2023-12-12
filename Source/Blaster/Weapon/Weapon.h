@@ -85,6 +85,7 @@ public:
 	FORCEINLINE EFireType GetWeaponFireType() const { return FireType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMaxAmmoCapacity() const { return MaxAmmoCapacity; }
+	FORCEINLINE float GetWeaponDamage() const { return Damage; }
 
 	virtual void OnRep_Owner() override;
 
@@ -132,6 +133,12 @@ public:
 	bool bDestroyWeapon = false; // 设置角色默认武器在死亡后自动销毁
 
 protected:
+	// 用于更新 AmmoHUD
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerPlayerController;
+	
 	/// Trace end with scatter 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float DistanceToSphere = 800.f;
@@ -139,6 +146,12 @@ protected:
 	float SphereRadius = 75.f;
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	bool bUseScatter = false;
+
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.f; // 武器伤害
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false; // 是否使用服务器端回滚
 
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")
@@ -164,12 +177,6 @@ private:
 	// 武器开火类型
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
 	EFireType FireType;
-
-	// 用于更新 AmmoHUD
-	UPROPERTY()
-	class ABlasterCharacter* BlasterOwnerCharacter;
-	UPROPERTY()
-	class ABlasterPlayerController* BlasterOwnerPlayerController;
 
 	/// Aiming FOV
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")

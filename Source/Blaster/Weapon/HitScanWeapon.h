@@ -28,9 +28,4 @@ protected:
 	USoundCue* FireSound; // 开火音效
 	UPROPERTY(EditAnywhere)
 	USoundCue* ImpactSound; // 击中音效
-	
-	UPROPERTY(EditAnywhere)
-	float Damage = 20.f;
-
-private:
 };

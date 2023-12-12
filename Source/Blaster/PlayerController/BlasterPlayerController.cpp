@@ -468,8 +468,9 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(float TimeO
 {
 	// 计算 RTT
 	const float RTT = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	SingleTripTime = RTT * 0.5f;
 	// 根据 RTT 估算当前服务器时间
-	const float CurrentServerTime = TimeOfServerReceivedClientRequest + (0.5f * RTT);
+	const float CurrentServerTime = TimeOfServerReceivedClientRequest + SingleTripTime;
 	// 计算客户端和服务器的时间差
 	ClientServerDeltaTime = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }

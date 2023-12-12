@@ -43,6 +43,8 @@ public:
 
 	void OnMatchStateSet(FName State);
 
+	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -82,6 +84,7 @@ private:
 	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0.f;
 	float ClientServerDeltaTime;
+	float SingleTripTime; // client 和 server 之间的单程时间
 	
 	UPROPERTY(EditAnywhere)
 	float TimeSyncFrequency = 5.f; // 5 秒同步一次时间

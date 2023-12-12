@@ -3,6 +3,8 @@
 
 #include "HitScanWeapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController//BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
@@ -33,8 +35,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor());
 			if (Character && FireHit.GetActor() != GetOwner()) // 不对自己造成伤害
 			{
-				// 只有服务器端才能造成伤害
-				if (HasAuthority())
+				// 服务器端无延迟，直接造成伤害；不使用服务器端回滚，由服务器造成伤害
+				if (HasAuthority() || !bUseServerSideRewind)
 				{
 					UGameplayStatics::ApplyDamage(
 						Character,
@@ -43,6 +45,21 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						this,
 						UDamageType::StaticClass()
 					);
+				}
+				if (!HasAuthority() && bUseServerSideRewind)
+				{
+					BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+					if (BlasterOwnerCharacter) BlasterOwnerPlayerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+					if (BlasterOwnerPlayerController && BlasterOwnerCharacter->GetLagCompensationComponent())
+					{
+						BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreConfirm(
+							Character,
+							this,
+							Start,
+							HitTarget,
+							BlasterOwnerPlayerController->GetServerTime() - BlasterOwnerPlayerController->GetSingleTripTime() // 此时服务器时间 - RPC 单程时间 = 发射时服务器的时间
+						);
+					}
 				}
 
 				// 生成击中特效

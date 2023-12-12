@@ -55,11 +55,22 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+public:
+	UFUNCTION(Server, Reliable)
+	void ServerScoreConfirm(
+		class ABlasterCharacter* HitCharacter,
+		class AWeapon* DamageCauser,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation,
+		float HitTime
+	);
+
 protected:
 	void SaveFramePackage(FFramePackage& FramePackage);
+	void SaveFramePackage();
 
 	FServerSideRewindResult ServerSideRewind(
-		class ABlasterCharacter* HitCharacter,
+		ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
 		float HitTime
