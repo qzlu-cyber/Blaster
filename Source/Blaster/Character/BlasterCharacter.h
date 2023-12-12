@@ -94,6 +94,7 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	FORCEINLINE class UBuffComponent* GetBuffComponent() const { return Buff; }
+	FORCEINLINE class ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensation; }
 	FORCEINLINE class UStaticMeshComponent* GetGrenadeMeshComponent() const { return GrenadeMeshComponent; }
 
 	void PlayFireWeaponMontage(bool bAiming);

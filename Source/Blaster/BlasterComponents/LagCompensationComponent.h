@@ -46,9 +46,17 @@ public:
 protected:
 	void SaveFramePackage(FFramePackage& FramePackage);
 
+	void ServerSideRewind(class ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize& HitLocation,
+		float HitTime
+	);
+
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+
 private:
 	UPROPERTY()
-	class ABlasterCharacter* BlasterCharacter;
+	ABlasterCharacter* BlasterCharacter;
 	UPROPERTY()
 	class ABlasterPlayerController* PlayerController;
 
