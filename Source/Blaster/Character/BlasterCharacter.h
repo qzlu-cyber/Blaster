@@ -208,6 +208,9 @@ public:
 	UBoxComponent* Foot_L;
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* Foot_R;
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitBoxes;
 	
 private:
 	/// PlayerController
@@ -230,6 +233,8 @@ private:
 	UCombatComponent* Combat;
 	UPROPERTY(VisibleAnywhere)
 	UBuffComponent* Buff;
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensation;
 	// Dissolve
 	UPROPERTY(VisibleAnywhere, Category="Elim")
 	UTimelineComponent* DissolveTimeline;
