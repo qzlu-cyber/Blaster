@@ -147,7 +147,7 @@ private:
 	/// 当 client 端需要通知 server 端执行某些操作时（例如拾取物品等），可以使用 RPC
 	/// 当 RPC 是从 client 调用并在 server 上执行，client 必须拥有调用 RPC 的 Actor
 	UFUNCTION(Server, Reliable)
-	void ServerEquipWeapon();
+	void ServerEquipWeapon(AWeapon* WeaponToEquip);
 	UFUNCTION(Server, Reliable)
 	void ServerSwapWeapons();
 	UFUNCTION(Server, Reliable)

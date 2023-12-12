@@ -267,7 +267,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
 		
-		if (Combat) Combat->EquipWeapon(StartingWeapon);
+		if (Combat) ServerEquipWeapon(StartingWeapon);
 	}
 }
 
@@ -794,7 +794,7 @@ void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
 	if (Combat)
 	{
-		if (OverlappingWeapon) ServerEquipWeapon(); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
+		if (OverlappingWeapon) ServerEquipWeapon(OverlappingWeapon); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
 		else if (Combat->EquippedWeapon && Combat->SecondaryWeapon) ServerSwapWeapons();
 	}
 }
@@ -849,11 +849,11 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 }
 
 // 当 Client 调用 RPC 时， Server 端实际执行的操作
-void ABlasterCharacter::ServerEquipWeapon_Implementation()
+void ABlasterCharacter::ServerEquipWeapon_Implementation(AWeapon* WeaponToEquip)
 {
 	/// OverlappingWeapon 只复制给了 owner，所以只有 owner 可以拾取武器
 	/// 其他 client 端的 OverlappingWeapon 为 nullptr，所以不能拾取武器
-	if (Combat) Combat->EquipWeapon(OverlappingWeapon);
+	if (Combat) Combat->EquipWeapon(WeaponToEquip);
 }
 
 void ABlasterCharacter::ServerSwapWeapons_Implementation()
