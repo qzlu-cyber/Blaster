@@ -27,6 +27,9 @@ struct FFramePackage
 
 	UPROPERTY()
 	TMap<FName, FBoxInformation> HitBoxesInfo;
+
+	UPROPERTY()
+	class ABlasterCharacter* Character; // 用于标识是哪个角色的帧包
 };
 
 USTRUCT()
@@ -39,6 +42,18 @@ struct FServerSideRewindResult
 
 	UPROPERTY()
 	bool bHitHead; // 是否命中头部
+};
+
+USTRUCT()
+struct FShotgunServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<class ABlasterCharacter*, uint32> HeadHits; // 头部被击中的次数
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, uint32> BodyHits; // 身体被击中的次数
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -57,11 +72,20 @@ public:
 
 public:
 	UFUNCTION(Server, Reliable)
-	void ServerScoreConfirm(
-		class ABlasterCharacter* HitCharacter,
+	void ServerScoreRequest(
+		ABlasterCharacter* HitCharacter,
 		class AWeapon* DamageCauser,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
+		float HitTime
+	);
+
+	UFUNCTION(Server, Reliable)
+	void ShotgunServerScoreRequest(
+		const TArray<ABlasterCharacter*>& HitCharacters,
+		class AWeapon* DamageCauser,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime
 	);
 
@@ -69,10 +93,17 @@ protected:
 	void SaveFramePackage(FFramePackage& FramePackage);
 	void SaveFramePackage();
 
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, float HitTime);
 	FServerSideRewindResult ServerSideRewind(
 		ABlasterCharacter* HitCharacter,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
+		float HitTime
+	);
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(
+		const TArray<ABlasterCharacter*>& HitCharacters,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime
 	);
 
@@ -83,6 +114,11 @@ protected:
 		const FFramePackage& FramePackage,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation
+	);
+	FShotgunServerSideRewindResult ShotgunConfirmHit(
+		const TArray<FFramePackage>& FramePackages,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations
 	);
 	void CacheBoxInformation(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage);
