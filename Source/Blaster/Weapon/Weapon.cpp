@@ -245,7 +245,9 @@ void AWeapon::SpendRound()
 	/// 当是 server 端时，将更新后的 Ammo 通过 RPC 发送给对应的 client
 	/// 当是 client 时，则增加一次 server 端还未处理 Ammo 的更新请求，表示 server 端的更新还没到达此 client
 	if (HasAuthority()) ClientUpdateAmmo(Ammo);
-	else ++Sequence;
+	
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (!HasAuthority() && BlasterOwnerCharacter && BlasterOwnerCharacter->IsLocallyControlled()) ++Sequence;
 }
 
 void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
