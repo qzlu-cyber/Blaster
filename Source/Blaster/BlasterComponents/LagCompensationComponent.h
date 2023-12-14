@@ -50,7 +50,7 @@ struct FShotgunServerSideRewindResult
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TMap<class ABlasterCharacter*, uint32> HeadHits; // 头部被击中的次数
+	TMap<ABlasterCharacter*, uint32> HeadHits; // 头部被击中的次数
 
 	UPROPERTY()
 	TMap<ABlasterCharacter*, uint32> BodyHits; // 身体被击中的次数

@@ -18,6 +18,9 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
 	AWeapon::Fire(FVector()); // 播放开枪动画、生成弹壳、更新 HUD
 	
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn == nullptr) return;
+	
 	// 获取武器的 MuzzleFlash
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket)
@@ -35,7 +38,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			if (FireHit.bBlockingHit)
 			{
 				ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor());
-				if (Character && HasAuthority() && FireHit.GetActor() != GetOwner())
+				if (Character && FireHit.GetActor() != GetOwner())
 				{
 					if (HitCharactersMap.Contains(Character)) HitCharactersMap[Character]++;
 					else HitCharactersMap.Emplace(Character, 1);
@@ -71,8 +74,9 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			if (Pair.Key)
 			{
 				HitCharacters.Emplace(Pair.Key);
-				
-				if (HasAuthority() || !bUseServerSideRewind)
+
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
 						Pair.Key,

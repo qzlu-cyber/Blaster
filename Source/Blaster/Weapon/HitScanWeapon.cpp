@@ -17,6 +17,9 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn == nullptr) return;
+
 	// 获取武器的 MuzzleFlash
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket)
@@ -36,7 +39,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			if (Character && FireHit.GetActor() != GetOwner()) // 不对自己造成伤害
 			{
 				// 服务器端无延迟，直接造成伤害；不使用服务器端回滚，由服务器造成伤害
-				if (HasAuthority() || !bUseServerSideRewind)
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
 						Character,
