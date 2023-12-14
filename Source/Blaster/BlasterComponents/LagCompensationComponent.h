@@ -83,9 +83,17 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ShotgunServerScoreRequest(
 		const TArray<ABlasterCharacter*>& HitCharacters,
-		class AWeapon* DamageCauser,
+		AWeapon* DamageCauser,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
+		float HitTime
+	);
+
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& LaunchVelocity,
 		float HitTime
 	);
 
@@ -106,6 +114,12 @@ protected:
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime
 	);
+	FServerSideRewindResult ProjectileServerSideRewind(
+		ABlasterCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& LaunchVelocity,
+		float HitTime
+	);
 
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
 
@@ -119,6 +133,12 @@ protected:
 		const TArray<FFramePackage>& FramePackages,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations
+	);
+	FServerSideRewindResult ProjectileConfirmHit(
+		ABlasterCharacter* HitCharacter,
+		const FFramePackage& FramePackage,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& LaunchVelocity
 	);
 	void CacheBoxInformation(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage);
