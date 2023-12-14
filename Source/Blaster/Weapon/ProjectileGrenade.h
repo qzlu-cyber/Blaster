@@ -14,6 +14,10 @@ class BLASTER_API AProjectileGrenade : public AProjectile
 public:
 	AProjectileGrenade();
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -25,4 +29,7 @@ protected:
 private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* BounceSoundCue;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 2000.f;
 };

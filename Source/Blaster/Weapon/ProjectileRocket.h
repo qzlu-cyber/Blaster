@@ -16,6 +16,10 @@ public:
 
 	virtual void Destroyed() override;
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 protected:
 	virtual void OnHit(
 		UPrimitiveComponent* HitComponent,
@@ -35,4 +39,7 @@ private:
 	class UAudioComponent* ProjectileLoopComponent;
 	UPROPERTY(EditAnywhere)
 	class USoundAttenuation* ProjectileLoopAttenuation;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 2000.f;
 };

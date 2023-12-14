@@ -77,9 +77,7 @@ protected:
 	float DamageInnerRadius = 200.f;
 	UPROPERTY(EditAnywhere)
 	float DamageOuterRadius = 500.f;
-
-	UPROPERTY(EditAnywhere)
-	float InitialSpeed = 15000.f;
+	
 	bool bUseServerSideRewind = false;
 	FVector_NetQuantize StartLocation;
 	FVector_NetQuantize100 LaunchVelocity;
