@@ -34,9 +34,6 @@ protected:
 		const FHitResult& HitResult
 	);
 
-	UPROPERTY(EditAnywhere)
-	float Damage = 20.f; // 子弹的伤害值
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -47,6 +44,16 @@ protected:
 	void SpawnTrailSystem();
 	void ExplodeDamage();
 
+public:
+	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovementComponent() const { return ProjectileMovementComponent; }
+
+public:
+	float Damage = 20.f; // 子弹的伤害值
+	
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize StartLocation;
+	FVector_NetQuantize100 LaunchVelocity;
+
 protected:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ProjectileMesh;
@@ -55,7 +62,7 @@ protected:
 	class UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	UProjectileMovementComponent* ProjectileMovementComponent;
 	
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles; // 子弹的命中特效
@@ -77,10 +84,6 @@ protected:
 	float DamageInnerRadius = 200.f;
 	UPROPERTY(EditAnywhere)
 	float DamageOuterRadius = 500.f;
-	
-	bool bUseServerSideRewind = false;
-	FVector_NetQuantize StartLocation;
-	FVector_NetQuantize100 LaunchVelocity;
 
 private:
 	UPROPERTY(EditAnywhere)

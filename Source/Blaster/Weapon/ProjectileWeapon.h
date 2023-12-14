@@ -20,4 +20,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileClass; // 武器发射的子弹类
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AProjectile> ServerSideRewindProjectileClass; // 服务器端回滚时使用的子弹类，not replicated, spawn only on locally
 };
