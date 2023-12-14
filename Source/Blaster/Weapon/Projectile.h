@@ -78,6 +78,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DamageOuterRadius = 500.f;
 
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000.f;
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize StartLocation;
+	FVector_NetQuantize100 LaunchVelocity;
+
 private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer; // 子弹的粒子特效

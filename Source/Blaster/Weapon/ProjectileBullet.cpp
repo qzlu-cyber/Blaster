@@ -15,8 +15,8 @@ AProjectileBullet::AProjectileBullet()
 	PrimaryActorTick.bCanEverTick = true;
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->InitialSpeed = 15000.f; // 设置初始速度
-	ProjectileMovementComponent->MaxSpeed = 15000.f; // 设置最大速度
+	ProjectileMovementComponent->InitialSpeed = InitialSpeed; // 设置初始速度
+	ProjectileMovementComponent->MaxSpeed = InitialSpeed; // 设置最大速度
 	ProjectileMovementComponent->bRotationFollowsVelocity = true; // 设置飞行时旋转
 	ProjectileMovementComponent->SetIsReplicated(true);
 }
@@ -25,6 +25,23 @@ AProjectileBullet::AProjectileBullet()
 void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FPredictProjectilePathParams PredictParams;
+	PredictParams.ActorsToIgnore.Add(this);
+	PredictParams.StartLocation = GetActorLocation(); // 设置起始位置
+	PredictParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed; // 设置发射速度
+	PredictParams.ProjectileRadius = 5.f;
+	PredictParams.MaxSimTime = 4.f; // 设置最大模拟时间
+	PredictParams.SimFrequency = 30.f; // 设置模拟频率，越高越精确
+	PredictParams.DrawDebugTime = 5.f;
+	PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+	PredictParams.bTraceWithCollision = true; // 设置是否使用碰撞
+	PredictParams.bTraceWithChannel = true;
+	PredictParams.TraceChannel = ECC_Visibility; // 设置碰撞通道
+
+	FPredictProjectilePathResult PredictResult;
+
+	UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 	
 }
 
