@@ -101,6 +101,7 @@ public:
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapWeaponsMontage();
 
 	FVector GetHitTarget() const;
 
@@ -285,6 +286,8 @@ private:
 	UAnimMontage* ElimMontage; // 角色死亡时动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* ThrowGrenadeMontage; // 角色投掷手榴弹动画
+	UPROPERTY(EditAnywhere, Category=Combat)
+	UAnimMontage* SwapWeaponsMontage; // 角色切换武器动画
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;

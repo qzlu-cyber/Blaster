@@ -693,6 +693,12 @@ void ABlasterCharacter::PlayThrowGrenadeMontage()
 	if (AnimInstance && ThrowGrenadeMontage) AnimInstance->Montage_Play(ThrowGrenadeMontage);
 }
 
+void ABlasterCharacter::PlaySwapWeaponsMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // 得到角色的动画实例
+	if (AnimInstance && SwapWeaponsMontage) AnimInstance->Montage_Play(SwapWeaponsMontage);
+}
+
 void ABlasterCharacter::PlayHitReactMontage()
 {
 	if (!Combat || !Combat->EquippedWeapon) return;
@@ -791,7 +797,14 @@ void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 	if (Combat)
 	{
 		if (OverlappingWeapon) ServerEquipWeapon(OverlappingWeapon); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
-		else if (Combat->EquippedWeapon && Combat->SecondaryWeapon) ServerSwapWeapons();
+		else if (Combat->EquippedWeapon && Combat->SecondaryWeapon)
+		{
+			if (Combat->CombatState == ECombatState::ECS_Unoccupied)
+			{
+				ServerSwapWeapons();
+				if (!HasAuthority()) PlaySwapWeaponsMontage();
+			}
+		}
 	}
 }
 

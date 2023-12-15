@@ -128,6 +128,9 @@ private:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapping();
+
 	// 计算换弹数量
 	int32 AmountToReload();
 	// 更新各种弹药数

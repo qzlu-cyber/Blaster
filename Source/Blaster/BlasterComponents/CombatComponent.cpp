@@ -341,7 +341,10 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
+
+	Character->PlaySwapWeaponsMontage();
+	CombatState = ECombatState::ECS_SwappingWeapons;
 	
 	AWeapon* TmpWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
@@ -633,6 +636,11 @@ void UCombatComponent::FinishReloading()
 	if (bIsFire) Shoot();
 }
 
+void UCombatComponent::FinishSwapping()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 int32 UCombatComponent::AmountToReload()
 {
 	if (!Character || !EquippedWeapon) return 0;
@@ -753,6 +761,9 @@ void UCombatComponent::OnRep_CombatState()
 
 				ShowAttachedGrenade(true);
 			}
+			break;
+		case ECombatState::ECS_SwappingWeapons:
+			if (Character && !Character->IsLocallyControlled()) Character->PlaySwapWeaponsMontage();
 			break;
 		default: break;
 	}
