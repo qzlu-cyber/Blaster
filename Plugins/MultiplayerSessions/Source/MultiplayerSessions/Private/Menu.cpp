@@ -18,7 +18,7 @@ void UMenu::MenuSetUp(int32 NumberOfPublicConnections, FString TypeOfMatch, int3
 	
 	AddToViewport(); // 将 Widget 添加到 Viewport 中
 	SetVisibility(ESlateVisibility::Visible); // 设置 Widget 的可见性
-	bIsFocusable = true; // 设置 Widget 可以获得焦点
+	SetIsFocusable(true); // 设置 Widget 可以获得焦点
 
 	//
 	// 设置 Input Mode

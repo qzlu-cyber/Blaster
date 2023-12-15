@@ -10,12 +10,15 @@
 #include "Blaster/GameModes/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/HUD/ReturnToMainMenu.h"
 
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 
 void ABlasterPlayerController::BeginPlay()
 {
@@ -24,6 +27,36 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 
 	ServerCheckMatchState();
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	if (EnhancedInputSubsystem) EnhancedInputSubsystem->AddMappingContext(InputMapping, 1000);
+
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+	if (EnhancedInputComponent)
+	{
+		if (ExitAction)
+		{
+			EnhancedInputComponent->BindAction(ExitAction, ETriggerEvent::Triggered, this, &ABlasterPlayerController::ShowReturnToMainMenuWidget);
+		}
+	}
+}
+
+void ABlasterPlayerController::ShowReturnToMainMenuWidget(const FInputActionValue& Value)
+{
+	if (ReturnToMainMenuWidgetClass == nullptr) return;
+
+	if (ReturnToMainMenuWidget == nullptr) ReturnToMainMenuWidget = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidgetClass);
+	if (ReturnToMainMenuWidget)
+	{
+		bReturnToMainMenuWidgetShown = !bReturnToMainMenuWidgetShown;
+		if (bReturnToMainMenuWidgetShown) ReturnToMainMenuWidget->MenuSetup();
+		else ReturnToMainMenuWidget->MenuTeardown();
+	}
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -50,6 +50,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void SetupInputComponent() override;
+
 	void PollInit();
 	void CheckPing(float DeltaSeconds);
 
@@ -75,6 +77,8 @@ private:
 
 	void HandleMatchHasStarted();
 	void HandleCooldown();
+
+	void ShowReturnToMainMenuWidget(const struct FInputActionValue& Value);
 
 public:
 	FPingTooHighDelegate PingTooHighDelegate;
@@ -110,6 +114,18 @@ private:
 
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	class UInputMappingContext* InputMapping;
+	// return to main menu action
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
+	class UInputAction* ExitAction;
+
+	UPROPERTY(EditAnywhere, Category=HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenuWidget;
+	bool bReturnToMainMenuWidgetShown = false;
 
 	float HealthHUD;
 	float MaxHealthHUD;
