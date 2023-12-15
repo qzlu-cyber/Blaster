@@ -113,6 +113,9 @@ private:
 	UFUNCTION(Client, Reliable)
 	void ClientAddAmmo(int32 AmmoToAdd);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
 public:
 	/// 绘制准星的材质
 	UPROPERTY(EditAnywhere, Category="Crosshire")
@@ -150,8 +153,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f; // 武器伤害
 
-	UPROPERTY(EditAnywhere)
-	bool bUseServerSideRewind = false; // 是否使用服务器端回滚
+	UPROPERTY(Replicated, EditAnywhere)
+	bool bUseServerSideRewind = false; // 是否使用服务器端回滚。当 ping 太高时自动禁用，需要在 server 和 client 同步
 
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")

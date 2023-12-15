@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPingTooHighDelegate, bool, bPingTooHigh);
+
 /**
  * 
  */
@@ -49,6 +51,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void PollInit();
+	void CheckPing(float DeltaSeconds);
 
 private:
 	void SetHUDTime();
@@ -60,6 +63,9 @@ private:
 	void ClientReportServerTime(float TimeOfClientRequest, float TimeOfServerReceivedClientRequest);
 
 	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bPingTooHigh);
+
+	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(FName State, float TimeOfMatch, float TimeOfWarmup, float TimeOfCooldown, float TimeOfStartingLevel);
@@ -69,6 +75,9 @@ private:
 
 	void HandleMatchHasStarted();
 	void HandleCooldown();
+
+public:
+	FPingTooHighDelegate PingTooHighDelegate;
 
 private:
 	// PlayerController 才可以拿到 HUD

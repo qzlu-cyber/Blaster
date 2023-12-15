@@ -71,6 +71,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
 
 /**
@@ -144,6 +145,11 @@ FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget)
 	return FVector(TraceStart + ToTraceEnd * TRACE_LENGTH / ToTraceEnd.Size());
 }
 
+void AWeapon::OnPingTooHigh(bool bPingTooHigh)
+{
+	bUseServerSideRewind = !bPingTooHigh;
+}
+
 void AWeapon::OnEquipped()
 {
 	ShowWeaponPickupWidget(false);  // 拾取武器后隐藏拾取提示
@@ -159,6 +165,16 @@ void AWeapon::OnEquipped()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	}
 	WeaponMesh->SetRenderCustomDepth(false); // 装备武器后禁用 Outline
+
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (BlasterOwnerCharacter && bUseServerSideRewind)
+	{
+		BlasterOwnerPlayerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		if (BlasterOwnerPlayerController && HasAuthority() && !BlasterOwnerPlayerController->PingTooHighDelegate.IsBound())
+		{
+			BlasterOwnerPlayerController->PingTooHighDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::OnEquippedSecondary()
@@ -178,6 +194,16 @@ void AWeapon::OnEquippedSecondary()
 	WeaponMesh->SetRenderCustomDepth(true);
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 	WeaponMesh->MarkRenderStateDirty();
+	
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (BlasterOwnerCharacter)
+	{
+		BlasterOwnerPlayerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		if (BlasterOwnerPlayerController && HasAuthority() && BlasterOwnerPlayerController->PingTooHighDelegate.IsBound())
+		{
+			BlasterOwnerPlayerController->PingTooHighDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::OnDropped()
@@ -193,6 +219,16 @@ void AWeapon::OnDropped()
 	WeaponMesh->SetRenderCustomDepth(true);
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
+
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
+	if (BlasterOwnerCharacter)
+	{
+		BlasterOwnerPlayerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		if (BlasterOwnerPlayerController && HasAuthority() && BlasterOwnerPlayerController->PingTooHighDelegate.IsBound())
+		{
+			BlasterOwnerPlayerController->PingTooHighDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::OnWeaponStateSet()

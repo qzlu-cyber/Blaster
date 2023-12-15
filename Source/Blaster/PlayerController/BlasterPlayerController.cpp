@@ -2,7 +2,6 @@
 
 
 #include "BlasterPlayerController.h"
-
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
@@ -62,6 +61,31 @@ void ABlasterPlayerController::PollInit()
 	}
 }
 
+void ABlasterPlayerController::CheckPing(float DeltaSeconds)
+{
+	if (HasAuthority()) return;
+	
+	PingCheckLastTime += DeltaSeconds;
+	if (PingCheckLastTime >= CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : PlayerState;
+		if (PlayerState)
+		{
+			if (PlayerState->GetCompressedPing() * 4 >= HighPingThreshold)
+			{
+				HighPingWarning();
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				StopHighPingWarning();
+				ServerReportPingStatus(false);
+			}
+		}
+		PingCheckLastTime = 0.f;
+	}
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -75,19 +99,14 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 		TimeSinceLastSync = 0.f; // 重置同步时间
 	}
 
-	PingCheckLastTime += DeltaSeconds;
-	if (PingCheckLastTime >= CheckPingFrequency)
-	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : PlayerState;
-		if (PlayerState)
-		{
-			if (PlayerState->GetCompressedPing() * 4 >= HighPingThreshold) HighPingWarning();
-			else StopHighPingWarning();
-		}
-		PingCheckLastTime = 0.f;
-	}
+	CheckPing(DeltaSeconds);
 
 	PollInit();
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bPingTooHigh)
+{
+	PingTooHighDelegate.Broadcast(bPingTooHigh);
 }
 
 /// ReceivedPlayer() 函数只在客户端 PlayerController 上执行，不在服务器上执行
