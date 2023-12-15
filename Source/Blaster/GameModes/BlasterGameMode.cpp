@@ -71,9 +71,28 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
 	
 	if (AttackerPlayerState && VictimPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState) // 有攻击者和被攻击者
 	{
+		TArray<ABlasterPlayerState*> PlayersCurrentlyInTheLead; // 当前最高得分玩家
+		for (auto LeadPlayer : BlasterGameState->TopScoringPlayers)
+			PlayersCurrentlyInTheLead.Emplace(LeadPlayer);
+		
 		AttackerPlayerState->AddToScore(1.0f); // 攻击者增加击杀次数
-		BlasterGameState->UpdateTopScore(AttackerPlayerState); // 检查是否需要更新最高得分玩家
 		VictimPlayerState->AddToDeath(1); // 被攻击者增加死亡次数
+		BlasterGameState->UpdateTopScore(AttackerPlayerState); // 检查是否需要更新最高得分玩家
+
+		if (BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			ABlasterCharacter* LeadCharacter = Cast<ABlasterCharacter>(AttackerPlayerState->GetPawn());
+			if (LeadCharacter) LeadCharacter->MulticastGainedTheLead();
+		}
+
+		for (int32 i = 0; i < PlayersCurrentlyInTheLead.Num(); ++i)
+		{
+			if (!BlasterGameState->TopScoringPlayers.Contains(PlayersCurrentlyInTheLead[i]))
+			{
+				ABlasterCharacter* LostLeadCharacter = Cast<ABlasterCharacter>(PlayersCurrentlyInTheLead[i]->GetPawn());
+				if (LostLeadCharacter) LostLeadCharacter->MulticastLostTheLead();
+			}
+		}
 	}
 	
 	if (EliminatedPlayer) EliminatedPlayer->Elim(false);

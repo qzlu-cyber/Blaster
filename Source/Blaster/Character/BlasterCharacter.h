@@ -135,6 +135,11 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerLeaveGame();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -295,6 +300,12 @@ private:
 	UAnimMontage* ThrowGrenadeMontage; // 角色投掷手榴弹动画
 	UPROPERTY(EditAnywhere, Category=Combat)
 	UAnimMontage* SwapWeaponsMontage; // 角色切换武器动画
+
+	// Niagara
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* CrownSystem; // MVP 角色头顶的粒子特效
+	UPROPERTY()
+	class UNiagaraComponent* CrownSystemComponent;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnhancedInput|Action", meta=(AllowPrivateAccess="true"))
 	float MoveSpeed = 600.f;
