@@ -35,6 +35,8 @@ public:
 
 	void PlayerRespawn(ACharacter* ElimmedPlayer, AController* ElimmedPayerController);
 
+	void PlayerLeftGame(class ABlasterPlayerState* LeavingPlayer);
+
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 
 protected:

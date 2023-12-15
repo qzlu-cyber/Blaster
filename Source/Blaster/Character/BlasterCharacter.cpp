@@ -715,7 +715,8 @@ void ABlasterCharacter::PlayHitReactMontage()
 void ABlasterCharacter::ElimTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
-	if (BlasterGameMode) BlasterGameMode->PlayerRespawn(this, Controller);
+	if (BlasterGameMode && !bLeftGame) BlasterGameMode->PlayerRespawn(this, Controller);
+	if (bLeftGame && IsLocallyControlled()) OnLeftGameDelegate.Broadcast();
 }
 
 void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
@@ -733,7 +734,7 @@ void ABlasterCharacter::StartDissolveTimeline()
 	}
 }
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
 	// 丢掉或销毁武器
 	if (Combat)
@@ -750,15 +751,14 @@ void ABlasterCharacter::Elim()
 		}
 	}
 	
-	MulticastElim();
-
-	// 重生
-	GetWorldTimerManager().SetTimer(ElimTimerHandle, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+	MulticastElim(bPlayerLeftGame);
 }
 
 // server 端调用 ReceiveDamage()，ReceiveDamage 调用多播 RPC，在所有 client 端执行
-void ABlasterCharacter::MulticastElim_Implementation()
+void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame;
+	
 	// 角色死亡，设置武器弹药归零
 	if (BlasterPlayerController) BlasterPlayerController->SetWeaponAmmoHUD(0);
 	
@@ -789,6 +789,9 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	// 禁用碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	// 重生
+	GetWorldTimerManager().SetTimer(ElimTimerHandle, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
@@ -873,6 +876,13 @@ void ABlasterCharacter::ServerSwapWeapons_Implementation()
 void ABlasterCharacter::SeverDropWeapon_Implementation(AWeapon* WeaponToDrop)
 {
 	if (Combat) Combat->DropWeapon(WeaponToDrop);
+}
+
+void ABlasterCharacter::ServerLeaveGame_Implementation()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterGameMode && BlasterPlayerState) BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 }
 
 bool ABlasterCharacter::IsWeaponEquipped() const

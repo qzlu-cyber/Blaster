@@ -11,6 +11,8 @@
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGameDelegate);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -109,10 +111,10 @@ public:
 
 	/// 处理角色死亡时的逻辑
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElim();
+	void MulticastElim(bool bPlayerLeftGame);
 
 	// server 处理角色死亡时需要单独在 erver 端执行的逻辑，如角色 respawn
-	void Elim();
+	void Elim(bool bPlayerLeftGame);
 
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
@@ -129,6 +131,9 @@ public:
 	// 当装备的武器是狙击枪时，在瞄准时显示狙击镜
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowWidget);
+
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
 
 private:
 	UFUNCTION()
@@ -213,6 +218,8 @@ public:
 
 	UPROPERTY()
 	TMap<FName, UBoxComponent*> HitBoxes;
+
+	FOnLeftGameDelegate OnLeftGameDelegate;
 	
 private:
 	/// PlayerController
@@ -323,6 +330,7 @@ private:
 	float HideCameraDistance = 200.f;
 
 	/// Player Stats
+	bool bLeftGame = false; // 角色是否退出游戏
 	UPROPERTY(EditAnywhere, Category="Player Stats")
 	float MaxShield = 100.f; // 最大护盾值
 	UPROPERTY(ReplicatedUsing=OnRep_Shield, EditAnywhere, Category="Player Stats")

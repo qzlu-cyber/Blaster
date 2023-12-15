@@ -76,7 +76,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
 		VictimPlayerState->AddToDeath(1); // 被攻击者增加死亡次数
 	}
 	
-	if (EliminatedPlayer) EliminatedPlayer->Elim();
+	if (EliminatedPlayer) EliminatedPlayer->Elim(false);
 }
 
 void ABlasterGameMode::PlayerRespawn(ACharacter* ElimmedPlayer, AController* ElimmedPayerController)
@@ -93,4 +93,17 @@ void ABlasterGameMode::PlayerRespawn(ACharacter* ElimmedPlayer, AController* Eli
 		int32 PlayerStartIndex = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedPayerController, PlayerStarts[PlayerStartIndex]); // 重生角色
 	}
+}
+
+void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* LeavingPlayer)
+{
+	if (LeavingPlayer == nullptr) return;
+
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+	// 如果退出游戏的玩家是 TopScoringPlayers 之一，删除
+	if (BlasterGameState &&
+		BlasterGameState->TopScoringPlayers.Contains(LeavingPlayer))  BlasterGameState->TopScoringPlayers.Remove(LeavingPlayer);
+
+	ABlasterCharacter* LeavingCharacter = Cast<ABlasterCharacter>(LeavingPlayer->GetPawn());
+	if (LeavingCharacter) LeavingCharacter->Elim(true); // 播放退出动画
 }

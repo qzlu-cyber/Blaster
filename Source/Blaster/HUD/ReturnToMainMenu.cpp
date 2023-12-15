@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "GameFramework/GameModeBase.h"
 #include "MultiplayerSessionsSubsystem.h"
+#include "Blaster/Character/BlasterCharacter.h"
 
 void UReturnToMainMenu::MenuSetup()
 {
@@ -63,11 +64,27 @@ void UReturnToMainMenu::ReturnButtonClicked()
 	MenuTeardown();
 }
 
+/// click exit button --> tell the server to leave --> server handle and elim player --> if left game: Broadcast OnLeftGameDelegate -->
+/// destroy the session --> player left the game
 void UReturnToMainMenu::ExitButtonClicked()
 {
 	ExitButton->SetIsEnabled(false); // 点击退出按钮后，禁用退出按钮，等待销毁 session
 
-	if (MultiplayerSessionsSubsystem) MultiplayerSessionsSubsystem->DestroySession();
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
+		if (PlayerController)
+		{
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn());
+			if (BlasterCharacter) // 获取到当前角色
+			{
+				BlasterCharacter->ServerLeaveGame(); // 调用 server RPC
+				BlasterCharacter->OnLeftGameDelegate.AddDynamic(this, &UReturnToMainMenu::OnPlayerLeftGame);
+			}
+			else ExitButton->SetIsEnabled(true);
+		}
+	}
 }
 
 void UReturnToMainMenu::OnDestroySessionComplete(bool bWasSuccessful)
@@ -89,4 +106,9 @@ void UReturnToMainMenu::OnDestroySessionComplete(bool bWasSuccessful)
 			if (PlayerController) PlayerController->ClientReturnToMainMenuWithTextReason(FText());
 		}
 	}
+}
+
+void UReturnToMainMenu::OnPlayerLeftGame()
+{
+	if (MultiplayerSessionsSubsystem) MultiplayerSessionsSubsystem->DestroySession();
 }
