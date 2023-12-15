@@ -213,24 +213,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(ABlasterCharacter*
 		);
 		if (ConfirmHitResult.bBlockingHit) // 击中了头部
 		{
-			if (ConfirmHitResult.Component.IsValid())
-			{
-				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-				if (Box)
-					DrawDebugBox(
-						GetWorld(),
-						Box->GetComponentLocation(),
-						Box->GetScaledBoxExtent(),
-						Box->GetComponentRotation().Quaternion(),
-						FColor::Red,
-						false,
-						5.f,
-						0,
-						2.f
-					);
-			}
-			DrawDebugSphere(GetWorld(), ConfirmHitResult.ImpactPoint, 10.f, 12, FColor::Orange, true);
-			
 			ResetBoxes(HitCharacter, CurrentFramePackage); // 重置 HitBoxes，关闭 HeadBox 的碰撞
 			HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 打开 Mesh 的碰撞
 			
@@ -256,22 +238,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(ABlasterCharacter*
 			);
 			if (ConfirmHitResult.bBlockingHit) // 击中了某个部位
 			{
-				DrawDebugSphere(GetWorld(), ConfirmHitResult.ImpactPoint, 10.f, 12, FColor::Orange, true);
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-						DrawDebugBox(
-							GetWorld(),
-							Box->GetComponentLocation(),
-							Box->GetScaledBoxExtent(),
-							Box->GetComponentRotation().Quaternion(),
-							FColor::Blue,
-							false,
-							5.f
-						);
-				}
-				
 				ResetBoxes(HitCharacter, CurrentFramePackage); // 重置 HitBoxes，关闭 HeadBox 的碰撞
 				HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 打开 Mesh 的碰撞
 			
@@ -324,21 +290,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(
 			);
 			if (ConfirmHitResult.bBlockingHit) // 击中了头部
 			{
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-						DrawDebugBox(
-							GetWorld(),
-							Box->GetComponentLocation(),
-							Box->GetScaledBoxExtent(),
-							Box->GetComponentRotation().Quaternion(),
-							FColor::Red,
-							false,
-							5.f
-						);
-				}
-				
 				ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor()); // 被击中的角色
 				if (HitCharacter)
 				{
@@ -377,21 +328,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(
 			);
 			if (ConfirmHitResult.bBlockingHit) // 击中了身体
 			{
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-						DrawDebugBox(
-							GetWorld(),
-							Box->GetComponentLocation(),
-							Box->GetScaledBoxExtent(),
-							Box->GetComponentRotation().Quaternion(),
-							FColor::Blue,
-							false,
-							5.f
-						);
-				}
-				
 				ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor()); // 被击中的角色
 				if (HitCharacter)
 				{
@@ -455,23 +391,6 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(ABlaster
 
 	if (PathResult.HitResult.bBlockingHit) // 击中头部
 	{
-		if (PathResult.HitResult.Component.IsValid())
-		{
-			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
-			if (Box)
-			{
-				DrawDebugBox(
-					GetWorld(),
-					Box->GetComponentLocation(),
-					Box->GetScaledBoxExtent(),
-					FQuat(Box->GetComponentRotation()),
-					FColor::Red,
-					false,
-					5.f
-				);
-			}
-		}
-
 		ResetBoxes(HitCharacter, CurrentFramePackage);
 		HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true, true };
@@ -491,23 +410,6 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(ABlaster
 		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 		if (PathResult.HitResult.bBlockingHit)
 		{
-			if (PathResult.HitResult.Component.IsValid())
-			{
-				UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
-				if (Box)
-				{
-					DrawDebugBox(
-						GetWorld(),
-						Box->GetComponentLocation(),
-						Box->GetScaledBoxExtent(),
-						FQuat(Box->GetComponentRotation()),
-						FColor::Blue,
-						false,
-						5.f
-					);
-				}
-			}
-
 			ResetBoxes(HitCharacter, CurrentFramePackage);
 			HitCharacter->GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true, false };

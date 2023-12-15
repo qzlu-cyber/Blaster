@@ -2,13 +2,10 @@
 
 
 #include "Projectile.h"
-
-#include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
 
 #include "Components/BoxComponent.h"
 #include "NiagaraFunctionLibrary.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 

@@ -1,9 +1,9 @@
 ﻿#include "ReturnToMainMenu.h"
+#include "Blaster/Character/BlasterCharacter.h"
 
 #include "Components/Button.h"
 #include "GameFramework/GameModeBase.h"
 #include "MultiplayerSessionsSubsystem.h"
-#include "Blaster/Character/BlasterCharacter.h"
 
 void UReturnToMainMenu::MenuSetup()
 {

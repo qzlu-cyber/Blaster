@@ -2,8 +2,8 @@
 
 
 #include "BuffComponent.h"
-
 #include "Blaster/Character/BlasterCharacter.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 
 
