@@ -5,6 +5,7 @@
 #include "Blaster/BlasterTypes/TurnInPlace.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Blaster/BlasterTypes/CombatState.h"
+#include "Blaster/BlasterTypes/Team.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
@@ -140,6 +141,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead();
 
+	void SetMeshByTeam(ETeam Team);
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -227,6 +230,12 @@ public:
 	FOnLeftGameDelegate OnLeftGameDelegate;
 	
 private:
+	/// SkeletalMesh
+	UPROPERTY(EditAnywhere)
+	USkeletalMesh* BlueTeamMesh;
+	UPROPERTY(EditAnywhere)
+	USkeletalMesh* RedTeamMesh;
+	
 	/// PlayerController
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;

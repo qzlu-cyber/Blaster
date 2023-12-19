@@ -12,6 +12,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerState, Death);
+	DOREPLIFETIME(ABlasterPlayerState, Team);
 }
 
 void ABlasterPlayerState::AddToScore(float ScoreAmount)
@@ -58,4 +59,10 @@ void ABlasterPlayerState::OnRep_Death()
 		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(BlasterCharacter->Controller) : BlasterPlayerController;
 		if (BlasterPlayerController) BlasterPlayerController->SetDeathHUD(Death);
 	}
+}
+
+void ABlasterPlayerState::OnRep_Team()
+{
+	BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
+	if (BlasterCharacter) BlasterCharacter->SetMeshByTeam(Team);
 }

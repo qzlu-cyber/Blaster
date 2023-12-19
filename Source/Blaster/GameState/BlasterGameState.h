@@ -18,10 +18,24 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void UpdateTopScore(class ABlasterPlayerState* ScoringPlayer);
 
+private:
+	UFUNCTION()
+	void OnRep_RedTeamScore();
+	UFUNCTION()
+	void OnRep_BlueTeamScore();
+	
+public:
 	UPROPERTY(Replicated)
 	TArray<ABlasterPlayerState*> TopScoringPlayers; // 保存得分最高的玩家，可能有多个
+
+	TArray<ABlasterPlayerState*> RedTeam;
+	TArray<ABlasterPlayerState*> BlueTeam;
 	
 private:
-
 	float TopScore = 0.f;
+
+	UPROPERTY(ReplicatedUsing=OnRep_RedTeamScore)
+	float RedTeamScore = 0.f;
+	UPROPERTY(ReplicatedUsing=OnRep_BlueTeamScore)
+	float BlueTeamScore = 0.f;
 };

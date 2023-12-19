@@ -180,6 +180,23 @@ void ABlasterCharacter::PostInitializeComponents()
 	}
 }
 
+void ABlasterCharacter::SetMeshByTeam(ETeam Team)
+{
+	if (GetMesh() == nullptr || BlueTeamMesh == nullptr || RedTeamMesh == nullptr) return;
+
+	switch (Team)
+	{
+		case ETeam::ET_NoTeam:
+		case ETeam::ET_BlueTeam:
+			GetMesh()->SetSkeletalMesh(BlueTeamMesh);
+			break;
+		case ETeam::ET_RedTeam:
+			GetMesh()->SetSkeletalMesh(RedTeamMesh);
+			break;
+		default: break;
+	}
+}
+
 void ABlasterCharacter::UpdateHealthHUD()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -212,7 +229,6 @@ void ABlasterCharacter::BeginPlay()
 	UpdateShieldHUD(); // 初始化护盾条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 	UpdateHealthHUD(); // 初始化血条。仍然需要调用它，因为在 BeginPlay 时，并非所有的 HUD 元素都有效，OnProcess() 就无法设置
 
-	SpawnDefaultWeapon(); // 生成默认武器
 	UpdateAmmoHUD(); // 初始化弹药 HUD
 
 	if (Combat) Combat->UpdateGrenades(); // 初始化手雷数量
@@ -276,6 +292,10 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToDeath(0);
+
+			SetMeshByTeam(BlasterPlayerState->GetTeam());
+
+			SpawnDefaultWeapon(); // 根据队伍设置不同的 SkeletalMesh 后生成默认武器
 
 			// 如果当前角色依然属于 TopScoringPlayers，Respawn 后即生成 Crown
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
@@ -904,9 +924,9 @@ void ABlasterCharacter::MulticastGainedTheLead_Implementation()
 	{
 		CrownSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			CrownSystem,
-			GetCapsuleComponent(),
+			GetMesh(),
 			FName(),
-			GetActorLocation() + FVector(5.f, -20.f, 100.f),
+			GetMesh()->GetBoneLocation("head") + FVector(0.f, 0.f, 30.f),
 			GetActorRotation(),
 			EAttachLocation::KeepWorldPosition,
 			false

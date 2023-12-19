@@ -12,11 +12,12 @@ void UOverheadUserWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UOverheadUserWidget::SetDisplayText(const FString& Text)
+void UOverheadUserWidget::SetDisplayText(const FString& Text, const FColor& Color)
 {
 	if (DisplayText)
 	{
 		DisplayText->SetText(FText::FromString(Text));
+		DisplayText->SetColorAndOpacity(FSlateColor(Color));
 	}
 }
 
@@ -33,5 +34,4 @@ void UOverheadUserWidget::ShowDisplayText(APawn* InPawn)
 		case ROLE_MAX: Role = "MAX"; break;
 	}
 	const FString LocalRoleString = FString::Printf(TEXT("LocalPlayer: %s"), *Role);
-	SetDisplayText(LocalRoleString);
 }
