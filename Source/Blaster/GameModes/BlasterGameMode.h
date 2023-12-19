@@ -55,6 +55,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float CooldownTime = 10.f; // 结算画面时间
 
-private:
-
+protected:
+	UPROPERTY(EditAnywhere)
+	bool bIsTeamsMatch = false; // 是否是团队模式
 };

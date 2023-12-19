@@ -38,12 +38,17 @@ public:
 
 	void HighPingWarning();
 	void StopHighPingWarning();
+
+	void HideTeamText();
+	void InitialTeamText();
+	void SetBlueTeamScoreHUD(int32 BlueTeamScore);
+	void SetRedTeamScoreHUD(int32 RedTeamScore);
 	
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual float GetServerTime() const;
 
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 
 	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
 
@@ -80,10 +85,13 @@ private:
 	UFUNCTION()
 	void OnRep_MatchState();
 
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 	void HandleCooldown();
 
 	void ShowReturnToMainMenuWidget(const struct FInputActionValue& Value);
+
+	UFUNCTION()
+	void OnRep_ShowTeamsText();
 
 public:
 	FPingTooHighDelegate PingTooHighDelegate;
@@ -131,6 +139,9 @@ private:
 	UPROPERTY()
 	class UReturnToMainMenu* ReturnToMainMenuWidget;
 	bool bReturnToMainMenuWidgetShown = false;
+
+	UPROPERTY(ReplicatedUsing=OnRep_ShowTeamsText)
+	bool bShowTeamsText = false;
 
 	float HealthHUD;
 	float MaxHealthHUD;

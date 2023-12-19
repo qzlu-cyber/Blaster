@@ -57,7 +57,7 @@ void ABlasterGameMode::OnMatchStateSet()
 	for (FConstControllerIterator It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
-		if (BlasterPlayerController)  BlasterPlayerController->OnMatchStateSet(MatchState);
+		if (BlasterPlayerController)  BlasterPlayerController->OnMatchStateSet(MatchState, bIsTeamsMatch);
 	}
 }
 
@@ -82,6 +82,8 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
 		
 		AttackerPlayerState->AddToScore(1.0f); // 攻击者增加击杀次数
 		VictimPlayerState->AddToDeath(1); // 被攻击者增加死亡次数
+		if (bIsTeamsMatch) // 更新队伍得分
+			AttackerPlayerState->GetTeam() == ETeam::ET_BlueTeam ? BlasterGameState->UpdateBlueTeamScore() : BlasterGameState->UpdateRedTeamScore(); 
 		BlasterGameState->UpdateTopScore(AttackerPlayerState); // 检查是否需要更新最高得分玩家
 
 		if (BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))

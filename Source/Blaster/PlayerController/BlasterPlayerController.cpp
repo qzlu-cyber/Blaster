@@ -64,6 +64,7 @@ void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+	DOREPLIFETIME(ABlasterPlayerController, bShowTeamsText);
 }
 
 void ABlasterPlayerController::PollInit()
@@ -467,11 +468,74 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
-void ABlasterPlayerController::OnMatchStateSet(FName State)
+void ABlasterPlayerController::HideTeamText()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueTeamText &&
+		BlasterHUD->CharacterOverlay->BlueTeamScore &&
+		BlasterHUD->CharacterOverlay->RedTeamText &&
+		BlasterHUD->CharacterOverlay->RedTeamScore)
+	{
+		BlasterHUD->CharacterOverlay->BlueTeamText->SetText(FText());
+		BlasterHUD->CharacterOverlay->BlueTeamScore->SetText(FText());
+		BlasterHUD->CharacterOverlay->RedTeamText->SetText(FText());
+		BlasterHUD->CharacterOverlay->RedTeamScore->SetText(FText());
+	}
+}
+
+void ABlasterPlayerController::InitialTeamText()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueTeamText &&
+		BlasterHUD->CharacterOverlay->BlueTeamScore &&
+		BlasterHUD->CharacterOverlay->RedTeamText &&
+		BlasterHUD->CharacterOverlay->RedTeamScore)
+	{
+		const FString Zero = FString::Printf(TEXT("%d"), 0);
+		const FString BlueTeamText = FString::Printf(TEXT("同盟国"));
+		const FString RedTeamText = FString::Printf(TEXT("轴心国"));
+		BlasterHUD->CharacterOverlay->BlueTeamText->SetText(FText::FromString(BlueTeamText));
+		BlasterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
+		BlasterHUD->CharacterOverlay->RedTeamText->SetText(FText::FromString(RedTeamText));
+		BlasterHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(Zero));
+
+		UE_LOG(LogTemp, Warning, TEXT("InitialTeamText"))
+	}
+}
+
+void ABlasterPlayerController::SetBlueTeamScoreHUD(int32 BlueTeamScore)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueTeamScore)
+	{
+		const FString ScoreText = FString::Printf(TEXT("%d"), BlueTeamScore);
+		BlasterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ABlasterPlayerController::SetRedTeamScoreHUD(int32 RedTeamScore)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->RedTeamScore)
+	{
+		const FString ScoreText = FString::Printf(TEXT("%d"), RedTeamScore);
+		BlasterHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ABlasterPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	MatchState = State;
 	
-	if (MatchState == MatchState::InProgress) HandleMatchHasStarted();
+	if (MatchState == MatchState::InProgress) HandleMatchHasStarted(bTeamsMatch);
 	else if (MatchState == MatchState::Cooldown) HandleCooldown();
 }
 
@@ -481,13 +545,26 @@ void ABlasterPlayerController::OnRep_MatchState()
 	else if (MatchState == MatchState::Cooldown) HandleCooldown();
 }
 
-void ABlasterPlayerController::HandleMatchHasStarted()
+void ABlasterPlayerController::OnRep_ShowTeamsText()
 {
+	if (bShowTeamsText) InitialTeamText();
+	else HideTeamText();
+}
+
+void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
+{
+	if (HasAuthority()) bShowTeamsText = bTeamsMatch;
+	
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
 		if (BlasterHUD->CharacterOverlay == nullptr) BlasterHUD->AddCharacterOverlay();
 		if (BlasterHUD->Announcement) BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden); // 游戏正式开始后隐藏 Announcement
+
+		if (!HasAuthority()) return;
+		
+		if (bTeamsMatch) InitialTeamText();
+		else HideTeamText();
 	}
 }
 

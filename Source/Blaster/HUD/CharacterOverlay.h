@@ -54,4 +54,13 @@ public:
 	UImage* HighPingImage; // 高延迟图片
 	UPROPERTY(meta=(BindWidgetAnim), Transient)
 	class UWidgetAnimation* HighPingAnimation; // 高延迟动画
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* BlueTeamText; // 蓝队文本
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* BlueTeamScore; // 蓝队分数
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* RedTeamText; // 红队文本
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* RedTeamScore; // 红队分数
 };
