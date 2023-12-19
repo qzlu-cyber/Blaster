@@ -407,6 +407,8 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 	}
 	else
 	{
@@ -414,6 +416,8 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 	}
 }
 
@@ -793,6 +797,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	// 禁用碰撞
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GrenadeMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// 销毁 Crown
 	if (CrownSystemComponent) CrownSystemComponent->DestroyComponent();
 	
