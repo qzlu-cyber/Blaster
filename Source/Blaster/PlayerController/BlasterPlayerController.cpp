@@ -183,10 +183,11 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn);
-	if (BlasterCharacter)
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
 	{
 		SetBlasterHealthHUD(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 		SetBlasterShieldHUD(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
+		SetGrenadeHUD(BlasterCharacter->GetCombatComponent()->GetGrenades());
 	}
 }
 
