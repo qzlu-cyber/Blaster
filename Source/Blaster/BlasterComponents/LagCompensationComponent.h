@@ -74,7 +74,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(
 		ABlasterCharacter* HitCharacter,
-		class AWeapon* DamageCauser,
 		const FVector_NetQuantize& TraceStart,
 		const FVector_NetQuantize& HitLocation,
 		float HitTime
@@ -83,7 +82,6 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ShotgunServerScoreRequest(
 		const TArray<ABlasterCharacter*>& HitCharacters,
-		AWeapon* DamageCauser,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime

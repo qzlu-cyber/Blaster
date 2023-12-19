@@ -86,6 +86,7 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMaxAmmoCapacity() const { return MaxAmmoCapacity; }
 	FORCEINLINE float GetWeaponDamage() const { return Damage; }
+	FORCEINLINE float GetWeaponHeadShotDamage() const { return HeadShotDamage; }
 
 	virtual void OnRep_Owner() override;
 
@@ -152,6 +153,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f; // 武器伤害
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40.f; // 武器爆头伤害
 
 	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false; // 是否使用服务器端回滚。当 ping 太高时自动禁用，需要在 server 和 client 同步

@@ -475,36 +475,39 @@ void ULagCompensationComponent::ResetBoxes(ABlasterCharacter* HitCharacter, cons
 }
 
 void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter,
-	AWeapon* DamageCauser, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
+	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	FServerSideRewindResult ConfirmResult = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
-	if (BlasterCharacter && DamageCauser && HitCharacter && ConfirmResult.bConfirmedHit)
+	if (BlasterCharacter && BlasterCharacter->GetEquippedWeapon() && HitCharacter && ConfirmResult.bConfirmedHit)
 	{
+		float Damage = ConfirmResult.bHitHead ? BlasterCharacter->GetEquippedWeapon()->GetWeaponHeadShotDamage() : BlasterCharacter->GetEquippedWeapon()->GetWeaponDamage();
 		UGameplayStatics::ApplyDamage(
 			HitCharacter, // 被击中的角色
-			DamageCauser->GetWeaponDamage(), // 伤害值
+			Damage, // 伤害值
 			BlasterCharacter->Controller, // 造成伤害的控制器
-			DamageCauser, // DamageCause
+			BlasterCharacter->GetEquippedWeapon(), // DamageCause
 			UDamageType::StaticClass() // 伤害类型
 		);
 	}
 }
 
 void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(
-	const TArray<ABlasterCharacter*>& HitCharacters, AWeapon* DamageCauser, const FVector_NetQuantize& TraceStart,
+	const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart,
 	const TArray<FVector_NetQuantize>& HitLocations, float HitTime)
 {
 	FShotgunServerSideRewindResult ConfirmResult = ShotgunServerSideRewind(HitCharacters, TraceStart, HitLocations, HitTime);
 
 	for (auto& HitCharacter : HitCharacters)
 	{
-		if (BlasterCharacter == nullptr || HitCharacter == nullptr || DamageCauser == nullptr) continue;
+		if (BlasterCharacter == nullptr || BlasterCharacter->GetEquippedWeapon() == nullptr || HitCharacter == nullptr) continue;
+
+		AWeapon* DamageCauser = BlasterCharacter->GetEquippedWeapon();
 
 		float Damage = 0.f;
 
 		if (ConfirmResult.HeadHits.Contains(HitCharacter))
 		{
-			const float HeadDamage = DamageCauser->GetWeaponDamage();
+			const float HeadDamage = DamageCauser->GetWeaponHeadShotDamage();
 			Damage += HeadDamage * ConfirmResult.HeadHits[HitCharacter];
 		}
 		if (ConfirmResult.BodyHits.Contains(HitCharacter))
@@ -529,11 +532,12 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 {
 	FServerSideRewindResult ConfirmResult = ProjectileServerSideRewind(HitCharacter, TraceStart, LaunchVelocity, HitTime);
 
-	if (BlasterCharacter && HitCharacter && ConfirmResult.bConfirmedHit)
+	if (BlasterCharacter && BlasterCharacter->GetEquippedWeapon() && HitCharacter && ConfirmResult.bConfirmedHit)
 	{
+		float Damage = ConfirmResult.bHitHead ? BlasterCharacter->GetEquippedWeapon()->GetWeaponHeadShotDamage() : BlasterCharacter->GetEquippedWeapon()->GetWeaponDamage();
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
-			BlasterCharacter->GetEquippedWeapon()->GetWeaponDamage(),
+			Damage,
 			BlasterCharacter->Controller,
 			BlasterCharacter->GetEquippedWeapon(),
 			UDamageType::StaticClass()

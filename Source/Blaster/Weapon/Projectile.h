@@ -48,7 +48,10 @@ public:
 	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovementComponent() const { return ProjectileMovementComponent; }
 
 public:
+	UPROPERTY(EditAnywhere)
 	float Damage = 20.f; // 子弹的伤害值
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40.f; // 子弹的爆头伤害值
 	
 	bool bUseServerSideRewind = false;
 	FVector_NetQuantize StartLocation;

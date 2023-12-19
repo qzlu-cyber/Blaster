@@ -58,6 +58,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 						);
 						SpawnedProjectile->bUseServerSideRewind = false;
 						SpawnedProjectile->Damage = Damage;
+						SpawnedProjectile->HeadShotDamage = HeadShotDamage;
 					}
 					else
 					{
@@ -86,6 +87,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 						/// 之前直接利用 projectile 的 Damage 值，但是生成 non replicated 的 projectile 后，此 projectile(DamageCauser) 不会被复制到 server
 						/// 因此，必须在确认命中时检查服务器上的武器伤害变量
 						SpawnedProjectile->Damage = Damage;
+						SpawnedProjectile->HeadShotDamage = HeadShotDamage;
 					}
 					else
 					{
@@ -109,6 +111,8 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 						ToTarget.Rotation(),
 						SpawnParameters
 					);
+					SpawnedProjectile->Damage = Damage;
+					SpawnedProjectile->HeadShotDamage = HeadShotDamage;
 					SpawnedProjectile->bUseServerSideRewind = false;
 				}
 			}

@@ -38,13 +38,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor());
 			if (Character && FireHit.GetActor() != GetOwner()) // 不对自己造成伤害
 			{
+				float DamageToCause = FireHit.BoneName.ToString() == FName("head") ? HeadShotDamage : Damage;
 				// 服务器端无延迟，直接造成伤害；不使用服务器端回滚，由服务器造成伤害
 				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
 						Character,
-						Damage,
+						DamageToCause,
 						GetOwner()->GetInstigatorController(),
 						this,
 						UDamageType::StaticClass()
@@ -58,7 +59,6 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					{
 						BlasterOwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(
 							Character,
-							this,
 							Start,
 							HitTarget,
 							BlasterOwnerPlayerController->GetServerTime() - BlasterOwnerPlayerController->GetSingleTripTime() // 此时服务器时间 - RPC 单程时间 = 发射时服务器的时间
@@ -115,6 +115,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit) BeamEnd = OutHit.ImpactPoint;
+		else OutHit.ImpactPoint = End;
 
 		// 无论是否击中都播放 BeamEffect
 		if (BeamEffect)

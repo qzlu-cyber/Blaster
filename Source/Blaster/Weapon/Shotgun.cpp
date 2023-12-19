@@ -30,6 +30,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		FVector Start = MuzzleFlashTransform.GetLocation();
 
 		TMap<ABlasterCharacter*, int32> HitCharactersMap; // 保存击中的角色和对应的击中次数
+		TMap<ABlasterCharacter*, int32> HeadShotCharactersMap; // 保存击中头部的角色和对应的击中次数
 		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult FireHit;
@@ -40,8 +41,17 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				ABlasterCharacter* Character = Cast<ABlasterCharacter>(FireHit.GetActor());
 				if (Character && FireHit.GetActor() != GetOwner())
 				{
-					if (HitCharactersMap.Contains(Character)) HitCharactersMap[Character]++;
-					else HitCharactersMap.Emplace(Character, 1);
+					bool bIsHeadShot = FireHit.BoneName.ToString() == FName("head");
+					if (bIsHeadShot)
+					{
+						if (HeadShotCharactersMap.Contains(Character)) HeadShotCharactersMap[Character]++;
+						else HeadShotCharactersMap.Emplace(Character, 1);
+					}
+					else
+					{
+						if (HitCharactersMap.Contains(Character)) HitCharactersMap[Character]++;
+						else HitCharactersMap.Emplace(Character, 1);
+					}
 				}
 
 				// 生成击中特效
@@ -69,18 +79,37 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		}
 
 		TArray<ABlasterCharacter*> HitCharacters;
+		TMap<ABlasterCharacter*, float> HitCharactersDamageMap; // 保存击中的角色和对应的伤害
 		for (auto Pair : HitCharactersMap)
 		{
 			if (Pair.Key)
 			{
 				HitCharacters.Emplace(Pair.Key);
 
+				HitCharactersDamageMap.Emplace(Pair.Key, Damage * Pair.Value);
+			}
+		}
+		for (auto Pair : HeadShotCharactersMap)
+		{
+			if (Pair.Key)
+			{
+				HitCharacters.Emplace(Pair.Key);
+
+				if (HitCharactersDamageMap.Contains(Pair.Key)) HitCharactersDamageMap[Pair.Key] += HeadShotDamage * Pair.Value; // 如果已经击中该角色身体，则累加头部伤害
+				else HitCharactersDamageMap.Emplace(Pair.Key, HeadShotDamage * Pair.Value);
+			}
+		}
+		for (auto Pair : HitCharactersDamageMap) // 对每个被击中的角色施加伤害
+		{
+			if (Pair.Key)
+			{
+				// 服务器端无延迟，直接造成伤害；不使用服务器端回滚，由服务器造成伤害
 				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
 						Pair.Key,
-						Damage * Pair.Value,
+						Pair.Value,
 						GetOwner()->GetInstigatorController(),
 						this,
 						UDamageType::StaticClass()
@@ -88,6 +117,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				}
 			}
 		}
+		
 		if (!HasAuthority() && bUseServerSideRewind)
 		{
 			BlasterOwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
@@ -98,7 +128,6 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				{
 					BlasterOwnerCharacter->GetLagCompensationComponent()->ShotgunServerScoreRequest(
 						HitCharacters,
-						this,
 						Start,
 						HitTargets,
 						BlasterOwnerPlayerController->GetServerTime() - BlasterOwnerPlayerController->GetSingleTripTime()
