@@ -46,9 +46,10 @@ public:
 
 	void AddCharacterOverlay();
 	void AddAnnouncement();
+	void AddElimAnnouncement(const FString& Attacker, const FString& Victim);
 
 private:
-	void DrawCrosshair(class UTexture2D* Texture, const FVector2D& DrawPoint, const FVector2D& Spread);
+	void DrawCrosshair(UTexture2D* Texture, const FVector2D& DrawPoint, const FVector2D& Spread);
 
 public:
 	UPROPERTY()
@@ -58,12 +59,17 @@ public:
 	class UAnnouncement* Announcement; // 公告 UI
 
 private:
+	UPROPERTY()
+	APlayerController* OwningPlayerController;
+	
 	FHUDPackage HUDPackage;
 
 	float CrosshairSpreadMax = 16.f;
 
 	UPROPERTY(EditAnywhere, Category="Player Stats")
-	TSubclassOf<class UUserWidget> CharacterOverlayClass; // 角色信息 UI 类
+	TSubclassOf<UUserWidget> CharacterOverlayClass; // 角色信息 UI 类
 	UPROPERTY(EditAnywhere, Category="Announcements")
-	TSubclassOf<class UUserWidget> AnnouncementClass;
+	TSubclassOf<UUserWidget> AnnouncementClass;
+	UPROPERTY(EditAnywhere, Category="Announcements")
+	TSubclassOf<UUserWidget> ElimAnnouncementClass;
 };

@@ -47,6 +47,8 @@ public:
 
 	FORCEINLINE float GetSingleTripTime() const { return SingleTripTime; }
 
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -54,6 +56,9 @@ protected:
 
 	void PollInit();
 	void CheckPing(float DeltaSeconds);
+
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
 private:
 	void SetHUDTime();

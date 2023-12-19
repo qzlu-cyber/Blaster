@@ -119,6 +119,28 @@ void ABlasterPlayerController::CheckPing(float DeltaSeconds)
 	}
 }
 
+void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if (Self && Attacker && Victim)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if (BlasterHUD)
+		{
+			if (Self == Attacker && Self != Victim) BlasterHUD->AddElimAnnouncement(FString::Printf(TEXT("你")), Victim->GetPlayerName());
+			else if (Self == Victim && Self != Attacker) BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), FString::Printf(TEXT("你")));
+			else if (Self == Attacker && Self == Victim) BlasterHUD->AddElimAnnouncement(FString::Printf(TEXT("你")), FString::Printf(TEXT("自己")));
+			else if (Attacker == Victim && Attacker != Self) BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), FString::Printf(TEXT("自己")));
+			else BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+		}
+	}
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
