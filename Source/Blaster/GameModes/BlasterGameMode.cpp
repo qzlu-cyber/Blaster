@@ -61,6 +61,11 @@ void ABlasterGameMode::OnMatchStateSet()
 	}
 }
 
+float ABlasterGameMode::CalculateDamage(AController* Attacher, AController* Victim, float BaseDamage) const
+{
+	return BaseDamage;
+}
+
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedPlayer,
                                         ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController)
 {

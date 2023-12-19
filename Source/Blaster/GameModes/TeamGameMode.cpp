@@ -71,3 +71,14 @@ void ATeamGameMode::HandleMatchHasStarted()
 		}
 	}
 }
+
+float ATeamGameMode::CalculateDamage(AController* Attacher, AController* Victim, float BaseDamage) const
+{
+	ABlasterPlayerState* AttackerPlayerState = Attacher->GetPlayerState<ABlasterPlayerState>();
+	ABlasterPlayerState* VictimPlayerState = Victim->GetPlayerState<ABlasterPlayerState>();
+
+	// 同一队伍不受伤害
+	if (AttackerPlayerState && VictimPlayerState && AttackerPlayerState->GetTeam() == VictimPlayerState->GetTeam()) return 0.f;
+
+	return BaseDamage;
+}

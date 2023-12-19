@@ -272,7 +272,7 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 
 void ABlasterCharacter::SpawnDefaultWeapon()
 {
-	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
 	UWorld* World = GetWorld();
 	if (BlasterGameMode && World && !bIsElimmed && DefaultWeaponClass)
 	{
@@ -445,7 +445,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (bIsElimmed) return; // 如果角色已经被淘汰，不再受到伤害
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
+
+	if (bIsElimmed || BlasterGameMode == nullptr) return; // 如果角色已经被淘汰，不再受到伤害
+
+	Damage = BlasterGameMode->CalculateDamage(InstigatedBy, Controller, Damage); // 计算伤害
 
 	float DamageToHealth = Damage; // 真伤
 	if (Shield > 0.f)
@@ -470,7 +474,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 	if (Health == 0.f)
 	{
-		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
 		if (BlasterGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -742,7 +745,7 @@ void ABlasterCharacter::PlayHitReactMontage()
 
 void ABlasterCharacter::ElimTimerFinished()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	if (BlasterGameMode && !bLeftGame) BlasterGameMode->PlayerRespawn(this, Controller);
 	if (bLeftGame && IsLocallyControlled()) OnLeftGameDelegate.Broadcast();
 }
@@ -911,7 +914,7 @@ void ABlasterCharacter::SeverDropWeapon_Implementation(AWeapon* WeaponToDrop)
 
 void ABlasterCharacter::ServerLeaveGame_Implementation()
 {
-	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
 	if (BlasterGameMode && BlasterPlayerState) BlasterGameMode->PlayerLeftGame(BlasterPlayerState);
 }

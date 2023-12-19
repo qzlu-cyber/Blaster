@@ -39,6 +39,8 @@ public:
 
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 
+	virtual float CalculateDamage(AController* Attacher, AController* Victim, float BaseDamage) const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;

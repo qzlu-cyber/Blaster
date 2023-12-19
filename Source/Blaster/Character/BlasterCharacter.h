@@ -240,6 +240,10 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
+	/// GameMode
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
+
 	/// Grenade
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* GrenadeMeshComponent;
