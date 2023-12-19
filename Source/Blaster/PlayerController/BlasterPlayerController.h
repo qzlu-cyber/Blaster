@@ -109,7 +109,7 @@ private:
 	float TimeSinceLastSync = 0.f; // 上次同步时间
 
 	UPROPERTY(EditAnywhere)
-	float HighPingThreshold = 100.f; // 延迟超过 300ms 就显示高延迟图片
+	float HighPingThreshold = 100.f; // 延迟超过 100ms 就显示高延迟图片
 	UPROPERTY(EditAnywhere)
 	float CheckPingFrequency = 10.f; // 10 秒检测一次 Ping
 	float PingCheckLastTime = 0.f; // 上次检测 Ping 的时间
