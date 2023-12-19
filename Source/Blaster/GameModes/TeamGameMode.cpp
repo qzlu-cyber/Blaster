@@ -4,6 +4,7 @@
 #include "TeamGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 ATeamGameMode::ATeamGameMode()
 {

@@ -38,8 +38,7 @@ public:
 
 	void HighPingWarning();
 	void StopHighPingWarning();
-
-	void HideTeamText();
+	
 	void InitialTeamText();
 	void SetBlueTeamScoreHUD(int32 BlueTeamScore);
 	void SetRedTeamScoreHUD(int32 RedTeamScore);
@@ -92,6 +91,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_ShowTeamsText();
+
+	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players);
+	FString GetTeamsInfoText(class ABlasterGameState* BlasterGameState);
 
 public:
 	FPingTooHighDelegate PingTooHighDelegate;

@@ -22,6 +22,9 @@ public:
 	void UpdateBlueTeamScore();
 	void UpdateRedTeamScore();
 
+	FORCEINLINE float GetBlueTeamScore() const { return BlueTeamScore; }
+	FORCEINLINE float GetRedTeamScore() const { return RedTeamScore; }
+
 private:
 	UFUNCTION()
 	void OnRep_RedTeamScore();
