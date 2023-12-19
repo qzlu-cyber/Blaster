@@ -6,13 +6,14 @@
 #include "Announcement.h"
 #include "ElimAnnouncement.h"
 
+#include "Components/HorizontalBox.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/PlayerController.h"
 
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// AddCharacterOverlay();
 }
 
 void ABlasterHUD::AddCharacterOverlay()
@@ -43,7 +44,35 @@ void ABlasterHUD::AddElimAnnouncement(const FString& Attacker, const FString& Vi
 		UElimAnnouncement* ElimAnnouncement = CreateWidget<UElimAnnouncement>(OwningPlayerController, ElimAnnouncementClass);
 		ElimAnnouncement->SetElimAnnouncementText(Attacker, Victim);
 		ElimAnnouncement->AddToViewport();
+
+		// 将较新的 ElimAnnouncement 移动到上方
+		for (auto Msg : ElimAnnouncements)
+		{
+			if (Msg && Msg->GetElimAnnouncementBox())
+			{
+				UCanvasPanelSlot* CanvasPanelSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(Msg->GetElimAnnouncementBox());
+				if (CanvasPanelSlot)
+				{
+					const FVector2D Position = CanvasPanelSlot->GetPosition();
+					const FVector2D NewPosition = FVector2D(Position.X, Position.Y - CanvasPanelSlot->GetSize().Y);
+					CanvasPanelSlot->SetPosition(NewPosition);
+				}
+			}
+		}
+
+		ElimAnnouncements.Emplace(ElimAnnouncement);
+
+		// 设置定时器，定时删除 ElimAnnouncement
+		FTimerHandle ElimAnnouncementTimerHandle;
+		FTimerDelegate ElimAnnouncementTimerDelegate;
+		ElimAnnouncementTimerDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncement);
+		GetWorldTimerManager().SetTimer(ElimAnnouncementTimerHandle, ElimAnnouncementTimerDelegate, ElimAnnouncementTime, false);
 	}
+}
+
+void ABlasterHUD::ElimAnnouncementTimerFinished(UUserWidget* WidgetToRemove)
+{
+	if (WidgetToRemove) WidgetToRemove->RemoveFromParent();
 }
 
 void ABlasterHUD::DrawHUD()

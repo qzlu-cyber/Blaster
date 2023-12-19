@@ -51,6 +51,9 @@ public:
 private:
 	void DrawCrosshair(UTexture2D* Texture, const FVector2D& DrawPoint, const FVector2D& Spread);
 
+	UFUNCTION()
+	void ElimAnnouncementTimerFinished(UUserWidget* WidgetToRemove);
+
 public:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay; // 角色信息 UI
@@ -72,4 +75,10 @@ private:
 	TSubclassOf<UUserWidget> AnnouncementClass;
 	UPROPERTY(EditAnywhere, Category="Announcements")
 	TSubclassOf<UUserWidget> ElimAnnouncementClass;
+
+	UPROPERTY()
+	TArray<class UElimAnnouncement*> ElimAnnouncements;
+
+	UPROPERTY(EditAnywhere)
+	float ElimAnnouncementTime = 15.f;
 };

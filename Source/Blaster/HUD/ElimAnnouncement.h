@@ -17,9 +17,11 @@ class BLASTER_API UElimAnnouncement : public UUserWidget
 public:
 	void SetElimAnnouncementText(const FString& Attacker, const FString& Victim);
 
+	FORCEINLINE class UHorizontalBox* GetElimAnnouncementBox() const { return ElimAnnouncementBox; }
+
 private:
 	UPROPERTY(meta=(BindWidget))
-	class UVerticalBox* ElimAnnouncementBox;
+	UHorizontalBox* ElimAnnouncementBox;
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* ElimAnnouncementText;
 };
