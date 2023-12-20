@@ -87,7 +87,13 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
-	if (Character) Character->SetOverlappingWeapon(this);
+	if (Character)
+	{
+		if (Character->IsHoldingTheFlag()) return;
+		if (WeaponType == EWeaponTypes::EWT_Flag && Team != Character->GetTeam()) return;
+
+		Character->SetOverlappingWeapon(this);
+	}
 }
 
 /**
@@ -101,7 +107,13 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
                                  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	ABlasterCharacter* Character = Cast<ABlasterCharacter>(OtherActor);
-	if (Character) Character->SetOverlappingWeapon(nullptr);
+	if (Character)
+	{
+		if (Character->IsHoldingTheFlag()) return;
+		if (WeaponType == EWeaponTypes::EWT_Flag && Team != Character->GetTeam()) return;
+		
+		Character->SetOverlappingWeapon(nullptr);
+	}
 }
 
 void AWeapon::ShowWeaponPickupWidget(bool bShowWidget)

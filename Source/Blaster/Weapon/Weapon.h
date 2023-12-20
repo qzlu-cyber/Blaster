@@ -3,6 +3,7 @@
 #pragma once
 
 #include "WeaponTypes.h"
+#include "Blaster/BlasterTypes/Team.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -160,6 +161,9 @@ protected:
 
 	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false; // 是否使用服务器端回滚。当 ping 太高时自动禁用，需要在 server 和 client 同步
+
+	UPROPERTY(EditAnywhere)
+	ETeam Team;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category="Weapon Properties")

@@ -1,6 +1,5 @@
 #include "BlasterCharacter.h"
 #include "Blaster/Weapon/Weapon.h"
-#include "Blaster/Weapon/Flag.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
@@ -1017,3 +1016,10 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	return Combat->CombatState;
 }
 
+ETeam ABlasterCharacter::GetTeam()
+{
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterPlayerState) return BlasterPlayerState->GetTeam();
+
+	return ETeam::ET_NoTeam;
+}

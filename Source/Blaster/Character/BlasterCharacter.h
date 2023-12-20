@@ -85,6 +85,7 @@ protected:
 public:	
 	void SetOverlappingWeapon(class AWeapon* Weapon);
 
+	ETeam GetTeam();
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
 	FORCEINLINE bool IsElimmed() const { return bIsElimmed; }
@@ -99,7 +100,7 @@ public:
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	FORCEINLINE class UBuffComponent* GetBuffComponent() const { return Buff; }
 	FORCEINLINE class ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensation; }
-	FORCEINLINE class UStaticMeshComponent* GetGrenadeMeshComponent() const { return GrenadeMeshComponent; }
+	FORCEINLINE UStaticMeshComponent* GetGrenadeMeshComponent() const { return GrenadeMeshComponent; }
 
 	void PlayFireWeaponMontage(bool bAiming);
 	void PlayReloadMontage();
