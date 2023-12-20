@@ -30,6 +30,9 @@ class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstan
 public:
 	UMultiplayerSessionsSubsystem();
 
+	FORCEINLINE int32 GetDesiredNumPublicConnections() const { return DesiredNumPublicConnections; }
+	FORCEINLINE FString GetDesiredMatchType() const { return DesiredMatchType; }
+
 	//
 	// 外部调用接口
 	//
@@ -84,4 +87,7 @@ private:
 	bool bCreateSessionOnDestroy{false};
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
+
+	int32 DesiredNumPublicConnections{};
+	FString DesiredMatchType{};
 };

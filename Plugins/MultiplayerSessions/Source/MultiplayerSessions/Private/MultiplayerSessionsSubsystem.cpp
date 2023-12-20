@@ -23,6 +23,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	// 检查 SessionInterface 是否有效
 	if (!IsValidSessionInterface()) return;
 
+	DesiredNumPublicConnections = NumPublicConnections;
+	DesiredMatchType = MatchType;
+
 	// 检查 Session 是否已存在，如果存在则销毁再创建新的 Session
 	FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession)

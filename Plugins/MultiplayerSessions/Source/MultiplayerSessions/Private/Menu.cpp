@@ -8,13 +8,13 @@
 
 #include "Components/Button.h"
 
-void UMenu::MenuSetUp(int32 NumberOfPublicConnections, FString TypeOfMatch, int32 MaxResultsOfSearch, FString LevelPath)
+void UMenu::MenuSetUp(int32 NumberOfPublicConnections, FString TypeOfMatch, int32 MaxResultsOfSearch, FString LobbyPath)
 {
 	// 设置参数
 	NumPublicConnections = NumberOfPublicConnections;
 	MatchType = TypeOfMatch;
 	MaxSearchResults = MaxResultsOfSearch;
-	PathToLevel = FString::Printf(TEXT("%s?listen"), *LevelPath);
+	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	
 	AddToViewport(); // 将 Widget 添加到 Viewport 中
 	SetVisibility(ESlateVisibility::Visible); // 设置 Widget 的可见性
@@ -83,7 +83,7 @@ void UMenu::OnCreateSessionComplete(bool bWasSuccessful)
 		}
 
 		UWorld* World = GetWorld();
-		if (World) World->ServerTravel(PathToLevel);
+		if (World) World->ServerTravel(PathToLobby);
 	}
 	else
 	{

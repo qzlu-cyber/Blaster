@@ -21,7 +21,7 @@ public:
 		int32 NumberOfPublicConnections = 4,
 		FString TypeOfMatch = FString(TEXT("FreeForAll")),
 		int32 MaxResultsOfSearch = 10000,
-		FString LevelPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby"))
+		FString LobbyPath = FString(TEXT("/Game/Maps/Lobby"))
 	);
 
 protected:
@@ -59,10 +59,12 @@ private:
 	UPROPERTY(meta=(BindWidget))
 	UButton* JoinButton;
 
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
 	int32 NumPublicConnections{4};
 	int32 MaxSearchResults{10000};
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess="true"))
 	FString MatchType{TEXT("FreeForAll")};
-	FString PathToLevel{TEXT("")};
+	FString PathToLobby{TEXT("")};
 
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 };
