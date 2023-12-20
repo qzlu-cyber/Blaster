@@ -883,7 +883,12 @@ void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 
 void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
 {
-	if (Combat && Combat->bIsHoldingTheFlag) return;
+	if (Combat && Combat->bIsHoldingTheFlag && Combat->Flag) // 如果拿着 Flag，按下后首先丢掉 Flag
+	{
+		SeverDropWeapon(Combat->Flag);
+
+		return;
+	}
 	
 	if (Combat && Combat->EquippedWeapon) SeverDropWeapon(Combat->EquippedWeapon);
 }

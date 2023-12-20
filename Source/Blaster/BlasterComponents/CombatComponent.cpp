@@ -406,13 +406,22 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 	// 卸下武器
 	WeaponToDrop->SetWeaponState(EWeaponState::EWS_Dropped);
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	
 	if (WeaponToDrop->GetWeaponType() == EWeaponTypes::EWT_Flag)
 	{
 		AFlag* FlagToDrop = Cast<AFlag>(WeaponToDrop);
 		if (FlagToDrop) FlagToDrop->GetFlahMesh()->DetachFromComponent(DetachmentTransformRules);
+
+		bIsHoldingTheFlag = false;
+		Flag = nullptr;
+
+		Character->UnCrouch();
+
 		WeaponToDrop->SetOwner(nullptr);
+
 		return;
 	}
+	
 	WeaponToDrop->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
 
 	WeaponToDrop->SetOwner(nullptr);
@@ -421,7 +430,7 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 		if (EquippedWeapon->GetBlasterOwnerPlayerController()) EquippedWeapon->GetBlasterOwnerPlayerController()->SetWeaponHUDVisibility(ESlateVisibility::Hidden);
 		EquippedWeapon = nullptr;
 
-		// 如果丢弃的是主武器且角色还装备有副武器，则自动将服务器装备为主武器
+		// 如果丢弃的是主武器且角色还装备有副武器，则自动将副武器装备为主武器
 		if (SecondaryWeapon) SwapWeapons();
 	}
 }
@@ -808,7 +817,6 @@ void UCombatComponent::OnRep_Flag()
 {
 	if (Flag)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Holding Flag Test"))
 		Flag->SetWeaponState(EWeaponState::EWS_Equipped);
 		AttachFlagToLeftHand(Flag);
 	}
@@ -816,7 +824,11 @@ void UCombatComponent::OnRep_Flag()
 
 void UCombatComponent::OnRep_IsHoldingTheFlag()
 {
-	if (bIsHoldingTheFlag && Character && Character->IsLocallyControlled()) Character->Crouch();
+	if (Character && Character->IsLocallyControlled())
+	{
+		if (bIsHoldingTheFlag) Character->Crouch();
+		if (!bIsHoldingTheFlag) Character->UnCrouch();
+	}
 }
 
 void UCombatComponent::ServerAiming_Implementation(bool bAiming)
