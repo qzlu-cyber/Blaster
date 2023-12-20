@@ -622,6 +622,8 @@ void ABlasterCharacter::Crouching(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
 
+	if (Combat && Combat->bIsHoldingTheFlag) return;
+
 	if (bIsCrouched) UnCrouch();
 	else Crouch();
 }
@@ -630,6 +632,8 @@ void ABlasterCharacter::Jump()
 {
 	if (bDisableGameplay) return;
 
+	if (Combat && Combat->bIsHoldingTheFlag) return;
+
 	if (bIsCrouched) UnCrouch();
 	else Super::Jump();
 }
@@ -637,11 +641,16 @@ void ABlasterCharacter::Jump()
 void ABlasterCharacter::Aiming(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
-
+	
 	if (Value.GetMagnitude() > 0.f) bIsAiming = true;
 	else bIsAiming = false;
 
-	if (Combat) Combat->Aiming(bIsAiming);
+	if (Combat)
+	{
+		if (Combat->bIsHoldingTheFlag) return;
+
+		Combat->Aiming(bIsAiming);
+	}
 }
 
 void ABlasterCharacter::Fire(const FInputActionValue& Value)
@@ -650,6 +659,8 @@ void ABlasterCharacter::Fire(const FInputActionValue& Value)
 
 	if (Combat)
 	{
+		if (Combat->bIsHoldingTheFlag) return;
+
 		// 开火和战斗有关，交给 CombatComponent 处理
 		if (Value.GetMagnitude() > 0.f) Combat->Fire(true);
 		else Combat->Fire(false);
@@ -660,14 +671,24 @@ void ABlasterCharacter::ThrowGrenade(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
 
-	if (Combat) if (Value.GetMagnitude() > 0.f) Combat->ThrowGrenade();
+	if (Combat)
+	{
+		if (Combat->bIsHoldingTheFlag) return;
+		
+		if (Value.GetMagnitude() > 0.f) Combat->ThrowGrenade();
+	}
 }
 
 void ABlasterCharacter::Reload(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
 
-	if (Combat) Combat->Reload();
+	if (Combat)
+	{
+		if (Combat->bIsHoldingTheFlag) return;
+		
+		Combat->Reload();
+	}
 }
 
 void ABlasterCharacter::PlayFireWeaponMontage(bool bAiming)
@@ -840,8 +861,12 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 // 不能在 client 端直接调用拾取函数，要先在 sever 端进行验证，统一由 server 端调用
 void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 {
+	if (bIsElimmed) return;
+	
 	if (Combat)
 	{
+		if (Combat->bIsHoldingTheFlag) return;
+		
 		if (OverlappingWeapon) ServerEquipWeapon(OverlappingWeapon); // 无论是 server 还是 client 端，调用 server RPC 都会在 server 上执行
 		else if (Combat->EquippedWeapon && Combat->SecondaryWeapon)
 		{
@@ -856,6 +881,8 @@ void ABlasterCharacter::EquipWeapon(const FInputActionValue& Value)
 
 void ABlasterCharacter::DropWeapon(const FInputActionValue& Value)
 {
+	if (Combat && Combat->bIsHoldingTheFlag) return;
+	
 	if (Combat && Combat->EquippedWeapon) SeverDropWeapon(Combat->EquippedWeapon);
 }
 
