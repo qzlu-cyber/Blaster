@@ -41,6 +41,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, SecondaryCarriedWeaponAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, bIsHoldingTheFlag);
 }
 
 void UCombatComponent::InitializeCarriedAmmoMap()
@@ -227,6 +228,14 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	if (HandSocket) HandSocket->AttachActor(ActorToAttach, Character->GetMesh());
 }
 
+void UCombatComponent::AttachFlagToLeftHand(AActor* FlagToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || FlagToAttach == nullptr) return;
+	
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("FlagSocket"));
+	if (HandSocket) HandSocket->AttachActor(FlagToAttach, Character->GetMesh());
+}
+
 void UCombatComponent::AttachActorToBack(AActor* ActorToAttach)
 {
 	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
@@ -289,13 +298,24 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	// Combat 不为 Unoccupied 状态无法装备武器
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr) EquipSecondaryWeapon(WeaponToEquip);
-	else EquipPrimaryWeapon(WeaponToEquip);
-	
-	/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
-	/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
-	Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	if (WeaponToEquip->GetWeaponType() == EWeaponTypes::EWT_Flag && !bIsHoldingTheFlag)
+	{
+		bIsHoldingTheFlag = true;
+		Character->Crouch();
+		AttachFlagToLeftHand(WeaponToEquip);
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		WeaponToEquip->SetOwner(Character);
+	}
+	else
+	{
+		if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr) EquipSecondaryWeapon(WeaponToEquip);
+		else EquipPrimaryWeapon(WeaponToEquip);
+
+		/// EquipWeapon 只会在 server 端执行，以下代码只会在 server 端执行
+		/// 为了使 client 和 server 同步，client 端的设置交由 OnRep_EquippedWeapon() 函数处理
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false; // 设置角色不跟随移动方向旋转
+		Character->bUseControllerRotationYaw = true; // 设置角色跟随控制器的旋转
+	}
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -772,6 +792,11 @@ void UCombatComponent::OnRep_CombatState()
 void UCombatComponent::OnRep_Grenades()
 {
 	UpdateGrenades();
+}
+
+void UCombatComponent::OnRep_IsHoldingTheFlag()
+{
+	if (bIsHoldingTheFlag && Character && Character->IsLocallyControlled()) Character->Crouch();
 }
 
 void UCombatComponent::ServerAiming_Implementation(bool bAiming)

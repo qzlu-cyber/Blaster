@@ -63,6 +63,7 @@ public:
 
 	void AttachActorToRightHand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void AttachFlagToLeftHand(AActor* FlagToAttach);
 	void AttachActorToBack(AActor* ActorToAttach);
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
 	void UpdateCarriedAmmo();
@@ -92,6 +93,8 @@ private:
 	void OnRep_CombatState();
 	UFUNCTION()
 	void OnRep_Grenades();
+	UFUNCTION()
+	void OnRep_IsHoldingTheFlag();
 
 	UFUNCTION(Server, Reliable)
 	void ServerAiming(bool bAiming);
@@ -223,6 +226,9 @@ private:
 	int32 MaxGrenades = 2; // 最多可携带的手雷数
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;
+
+	UPROPERTY(ReplicatedUsing=OnRep_IsHoldingTheFlag)
+	bool bIsHoldingTheFlag = false; // 是否正在持有旗帜
 
 	friend class ABlasterCharacter;
 };

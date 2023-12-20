@@ -68,9 +68,10 @@ public:
 
 	void SetWeaponState(EWeaponState NewState);
 	void SetAmmoHUD();
+	
 	FORCEINLINE class USphereComponent* GetWeaponCollision() const { return WeaponCollision; }
-
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE class UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 
 	virtual void Fire(const FVector& HitTarget);
 
@@ -169,10 +170,10 @@ private:
 	EWeaponState WeaponState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="HUD", meta=(AllowPrivateAccess="true"))
-	class UWidgetComponent* PickupWidget;
+	UWidgetComponent* PickupWidget;
 
 	UPROPERTY(EditAnywhere, Category="Weapon Properties")
-	class UAnimationAsset* FireAnimation; // 武器开火时动画
+	UAnimationAsset* FireAnimation; // 武器开火时动画
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; // 弹壳类

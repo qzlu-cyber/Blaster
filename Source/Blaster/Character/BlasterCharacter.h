@@ -88,6 +88,7 @@ public:
 	bool IsWeaponEquipped() const;
 	bool IsAiming() const;
 	FORCEINLINE bool IsElimmed() const { return bIsElimmed; }
+	FORCEINLINE bool IsHoldingTheFlag() const;
 
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }

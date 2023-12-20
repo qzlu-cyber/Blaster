@@ -76,4 +76,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
 	bool bUseAimOffset; // 换弹、投掷手雷时禁用 Aim Offset
+
+	UPROPERTY(BlueprintReadOnly, Category="Player Stats", meta=(AllowPrivateAccess="true"))
+	bool bIsHoldingTheFlag = false; // 是否持有旗帜
 };

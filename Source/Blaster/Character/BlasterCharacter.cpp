@@ -251,6 +251,15 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
+	if (Combat && Combat->bIsHoldingTheFlag)
+	{
+		TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 禁止角色转身动画
+		bRotateRootBone = false; // 禁止角色根骨骼旋转
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+
+		return;
+	}
 	if (bDisableGameplay)
 	{
 		TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 禁止角色转身动画
@@ -958,6 +967,12 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon() const
 bool ABlasterCharacter::IsAiming() const
 {
 	return (Combat && Combat->bIsAiming);
+}
+
+bool ABlasterCharacter::IsHoldingTheFlag() const
+{
+	if (Combat) return Combat->bIsHoldingTheFlag;
+	return false;
 }
 
 FVector ABlasterCharacter::GetHitTarget() const

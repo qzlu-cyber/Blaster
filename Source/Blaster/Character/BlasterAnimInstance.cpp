@@ -35,6 +35,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	TurnInPlace = BlasterCharacter->GetTurnInPlace();
 	bRotateRootBone = BlasterCharacter->GetRotateRootBone();
 	bIsElimmed = BlasterCharacter->IsElimmed();
+	bIsHoldingTheFlag = BlasterCharacter->IsHoldingTheFlag();
 	bUseFabrik = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied; // 只在 Combat 为 Unoccupied 时 启用
 	bTransformRightHand = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
 	bUseAimOffset = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
