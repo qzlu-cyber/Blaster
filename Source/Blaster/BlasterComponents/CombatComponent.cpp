@@ -4,6 +4,7 @@
 #include "CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/Weapon/Flag.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Weapon/Shotgun.h"
@@ -41,6 +42,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, SecondaryCarriedWeaponAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, Flag);
 	DOREPLIFETIME(UCombatComponent, bIsHoldingTheFlag);
 }
 
@@ -300,10 +302,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	if (WeaponToEquip->GetWeaponType() == EWeaponTypes::EWT_Flag && !bIsHoldingTheFlag)
 	{
-		bIsHoldingTheFlag = true;
 		Character->Crouch();
-		AttachFlagToLeftHand(WeaponToEquip);
+		Flag = WeaponToEquip;
+		bIsHoldingTheFlag = true;
 		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachFlagToLeftHand(WeaponToEquip);
 		WeaponToEquip->SetOwner(Character);
 	}
 	else
@@ -403,6 +406,13 @@ void UCombatComponent::DropWeapon(AWeapon* WeaponToDrop)
 	// 卸下武器
 	WeaponToDrop->SetWeaponState(EWeaponState::EWS_Dropped);
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	if (WeaponToDrop->GetWeaponType() == EWeaponTypes::EWT_Flag)
+	{
+		AFlag* FlagToDrop = Cast<AFlag>(WeaponToDrop);
+		if (FlagToDrop) FlagToDrop->GetFlahMesh()->DetachFromComponent(DetachmentTransformRules);
+		WeaponToDrop->SetOwner(nullptr);
+		return;
+	}
 	WeaponToDrop->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
 
 	WeaponToDrop->SetOwner(nullptr);
@@ -792,6 +802,16 @@ void UCombatComponent::OnRep_CombatState()
 void UCombatComponent::OnRep_Grenades()
 {
 	UpdateGrenades();
+}
+
+void UCombatComponent::OnRep_Flag()
+{
+	if (Flag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Holding Flag Test"))
+		Flag->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachFlagToLeftHand(Flag);
+	}
 }
 
 void UCombatComponent::OnRep_IsHoldingTheFlag()

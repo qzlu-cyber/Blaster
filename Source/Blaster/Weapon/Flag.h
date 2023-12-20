@@ -14,7 +14,13 @@ class BLASTER_API AFlag : public AWeapon
 public:
 	AFlag();
 
+	FORCEINLINE UStaticMeshComponent* GetFlahMesh() const { return FlagMesh; }
+
+protected:
+	virtual void OnEquipped() override;
+	virtual void OnDropped() override;
+
 private:
 	UPROPERTY(EditAnywhere)
-	class UStaticMeshComponent* FlagMesh;
+	UStaticMeshComponent* FlagMesh;
 };

@@ -1,5 +1,6 @@
 #include "BlasterCharacter.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/Flag.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
@@ -253,6 +254,7 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
 	if (Combat && Combat->bIsHoldingTheFlag)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("bIsHoldingTheFlag Test"))
 		TurnInPlace = ETurnInPlace::ETIP_NotTurning; // 禁止角色转身动画
 		bRotateRootBone = false; // 禁止角色根骨骼旋转
 		bUseControllerRotationYaw = true;
@@ -800,6 +802,7 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 	// 丢掉或销毁武器
 	if (Combat)
 	{
+		if (Combat->bIsHoldingTheFlag && Combat->Flag) Combat->DropWeapon(Combat->Flag);
 		if (Combat->EquippedWeapon)
 		{
 			if (!Combat->EquippedWeapon->bDestroyWeapon) Combat->DropWeapon(Combat->EquippedWeapon);

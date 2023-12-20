@@ -94,6 +94,8 @@ private:
 	UFUNCTION()
 	void OnRep_Grenades();
 	UFUNCTION()
+	void OnRep_Flag();
+	UFUNCTION()
 	void OnRep_IsHoldingTheFlag();
 
 	UFUNCTION(Server, Reliable)
@@ -227,6 +229,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Flag)
+	AWeapon* Flag = nullptr;
 	UPROPERTY(ReplicatedUsing=OnRep_IsHoldingTheFlag)
 	bool bIsHoldingTheFlag = false; // 是否正在持有旗帜
 

@@ -60,6 +60,9 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	virtual void OnEquipped();
+	virtual void OnDropped();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -105,10 +108,8 @@ private:
 	void SpendRound();
 
 	void OnWeaponStateSet();
-
-	void OnEquipped();
+	
 	void OnEquippedSecondary();
-	void OnDropped();
 
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateAmmo(int32 ServerAmmo);
