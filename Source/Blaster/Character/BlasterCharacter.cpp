@@ -1041,6 +1041,13 @@ bool ABlasterCharacter::IsHoldingTheFlag() const
 	return false;
 }
 
+void ABlasterCharacter::SetHoldingTheFlag(bool bHolding)
+{
+	if (Combat == nullptr) return;
+
+	Combat->bIsHoldingTheFlag = bHolding;
+}
+
 FVector ABlasterCharacter::GetHitTarget() const
 {
 	if (!Combat) return FVector();

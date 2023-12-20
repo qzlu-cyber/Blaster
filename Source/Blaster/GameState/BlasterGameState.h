@@ -19,8 +19,8 @@ public:
 	
 	void UpdateTopScore(class ABlasterPlayerState* ScoringPlayer);
 
-	void UpdateBlueTeamScore();
-	void UpdateRedTeamScore();
+	void UpdateBlueTeamScore(float Score);
+	void UpdateRedTeamScore(float Score);
 
 	FORCEINLINE float GetBlueTeamScore() const { return BlueTeamScore; }
 	FORCEINLINE float GetRedTeamScore() const { return RedTeamScore; }

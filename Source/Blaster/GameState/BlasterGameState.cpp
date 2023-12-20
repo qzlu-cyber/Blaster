@@ -35,17 +35,17 @@ void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
 	}
 }
 
-void ABlasterGameState::UpdateBlueTeamScore()
+void ABlasterGameState::UpdateBlueTeamScore(float Score)
 {
-	++BlueTeamScore;
+	BlueTeamScore += Score;
 
 	ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (BlasterPlayerController) BlasterPlayerController->SetBlueTeamScoreHUD(BlueTeamScore);
 }
 
-void ABlasterGameState::UpdateRedTeamScore()
+void ABlasterGameState::UpdateRedTeamScore(float Score)
 {
-	++RedTeamScore;
+	RedTeamScore += Score;
 
 	ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (BlasterPlayerController) BlasterPlayerController->SetRedTeamScoreHUD(RedTeamScore);

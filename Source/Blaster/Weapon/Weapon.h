@@ -88,6 +88,7 @@ public:
 	FORCEINLINE bool IsUseScatter() const { return bUseScatter; }
 	FORCEINLINE EWeaponTypes GetWeaponType() const { return WeaponType; }
 	FORCEINLINE EFireType GetWeaponFireType() const { return FireType; }
+	FORCEINLINE ETeam GetTeam() const { return Team; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMaxAmmoCapacity() const { return MaxAmmoCapacity; }
 	FORCEINLINE float GetWeaponDamage() const { return Damage; }

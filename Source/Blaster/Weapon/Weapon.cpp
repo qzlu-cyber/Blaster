@@ -90,7 +90,7 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	if (Character)
 	{
 		if (Character->IsHoldingTheFlag()) return;
-		if (WeaponType == EWeaponTypes::EWT_Flag && Team != Character->GetTeam()) return;
+		if (WeaponType == EWeaponTypes::EWT_Flag && Team == Character->GetTeam()) return; // 只能拿敌方的旗帜
 
 		Character->SetOverlappingWeapon(this);
 	}
@@ -110,7 +110,7 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (Character)
 	{
 		if (Character->IsHoldingTheFlag()) return;
-		if (WeaponType == EWeaponTypes::EWT_Flag && Team != Character->GetTeam()) return;
+		if (WeaponType == EWeaponTypes::EWT_Flag && Team == Character->GetTeam()) return;
 		
 		Character->SetOverlappingWeapon(nullptr);
 	}

@@ -90,6 +90,7 @@ public:
 	bool IsAiming() const;
 	FORCEINLINE bool IsElimmed() const { return bIsElimmed; }
 	FORCEINLINE bool IsHoldingTheFlag() const;
+	void SetHoldingTheFlag(bool bHolding);
 
 	FORCEINLINE float GetAOYaw() const { return AOYaw; }
 	FORCEINLINE float GetAOPitch() const { return AOPitch; }
