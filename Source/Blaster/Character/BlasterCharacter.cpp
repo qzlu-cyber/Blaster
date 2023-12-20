@@ -8,6 +8,7 @@
 #include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/PlayerStarts/TeamPlayerStart.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -197,6 +198,35 @@ void ABlasterCharacter::SetMeshByTeam(ETeam Team)
 	}
 }
 
+void ABlasterCharacter::SetPlayerStart()
+{
+	if (HasAuthority() && BlasterPlayerState && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(
+			this,
+			ATeamPlayerStart::StaticClass(),
+			PlayerStarts
+		);
+
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for (auto Start : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(Start);
+			if (TeamPlayerStart && TeamPlayerStart->GetTeam() == BlasterPlayerState->GetTeam()) TeamPlayerStarts.Emplace(TeamPlayerStart);
+		}
+
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			ATeamPlayerStart* PlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num() - 1)];
+			SetActorLocationAndRotation(
+				PlayerStart->GetActorLocation(),
+				PlayerStart->GetActorRotation()
+			);
+		}
+	}
+}
+
 void ABlasterCharacter::UpdateHealthHUD()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -304,6 +334,8 @@ void ABlasterCharacter::PollInit()
 			BlasterPlayerState->AddToDeath(0);
 
 			SetMeshByTeam(BlasterPlayerState->GetTeam());
+
+			SetPlayerStart();
 
 			SpawnDefaultWeapon(); // 根据队伍设置不同的 SkeletalMesh 后生成默认武器
 

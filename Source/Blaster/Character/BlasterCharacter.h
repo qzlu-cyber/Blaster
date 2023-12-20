@@ -145,6 +145,8 @@ public:
 
 	void SetMeshByTeam(ETeam Team);
 
+	void SetPlayerStart();
+
 private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
